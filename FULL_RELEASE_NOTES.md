@@ -1,7 +1,8 @@
 # 🚀 夸克网盘全能管理工具 (Quark Drive Master) 全量版本更新日志
 
-## 📦 v3.0.1 (2026-08-11) - CI/CD 流水线构建修复版
+## 📦 v3.0.1 (2026-08-11) - CI/CD 流水线与官方发布规范版
 
+- **🔗 官方 Git 源码仓库与 Release 发包下载地址**：<br/>• 官方 Git 仓库：<a href="https://github.com/LZ7TOP/quark-drive-master-extension" target="_blank" style="color:#60a5fa; text-decoration: underline;">https://github.com/LZ7TOP/quark-drive-master-extension</a><br/>• Releases 离线发包下载：<a href="https://github.com/LZ7TOP/quark-drive-master-extension/releases" target="_blank" style="color:#60a5fa; text-decoration: underline;">https://github.com/LZ7TOP/quark-drive-master-extension/releases</a>
 - **修复 GitHub Actions 流水线失败 Bug**：升级 setup-node 运行环境至 Node 22，移除强制 cache 限制并补全提交 package-lock.json 文件，保证 GitHub 持续集成 100% 成功。
 
 ---

@@ -3,7 +3,7 @@
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
   <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销</b></p>
 
-[![Extension Release](https://img.shields.io/badge/Extension-v3.0.1-2563EB?logo=googlechrome&logoColor=white)](manifest.json)
+[![Extension Release](https://img.shields.io/badge/Extension-v3.0.2-2563EB?logo=googlechrome&logoColor=white)](manifest.json)
 [![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author: LZ7工作室](https://img.shields.io/badge/Author-LZ7工作室-2563EB.svg)](https://github.com/LZ7TOP)

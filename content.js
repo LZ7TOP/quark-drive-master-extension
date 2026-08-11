@@ -579,10 +579,15 @@
     const itemsHtml = data
       .map((item) => `
         <div class="qr-timeline-item">
-          <div class="qr-timeline-header">
-            <span class="qr-version-badge">${ICONS.log} ${escapeHtml(item.version)}</span>
-            <span class="qr-tag-badge">${escapeHtml(item.tag)}</span>
-            <span class="qr-timeline-date">${escapeHtml(item.date)}</span>
+          <div class="qr-timeline-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="qr-version-badge">${ICONS.log} ${escapeHtml(item.version)}</span>
+              <span class="qr-tag-badge">${escapeHtml(item.tag)}</span>
+              <span class="qr-timeline-date">${escapeHtml(item.date)}</span>
+            </div>
+            <a href="https://github.com/LZ7TOP/quark-drive-master-extension/releases/tag/${escapeHtml(item.version)}" target="_blank" class="qr-btn-tool qr-btn-blue" style="height: 24px; padding: 0 10px; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; border-radius: 4px;" title="在 GitHub 下载 ${escapeHtml(item.version)} 官方 Release 发布包">
+              ${ICONS.file} 下载此版本
+            </a>
           </div>
           <ul class="qr-timeline-list">
             ${item.changes.map((c) => `<li><svg class="qr-change-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> <span>${c}</span></li>`).join('')}
