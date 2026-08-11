@@ -30,14 +30,40 @@ jobs:
       - name: Pack Extension Asset
         run: npm run pack
 
+      - name: Generate Detailed Release Notes
+        run: |
+          node -e '
+            const fs = require("fs");
+            const changelog = JSON.parse(fs.readFileSync("data/changelog.json"));
+            const currentTag = process.env.GITHUB_REF_NAME || "v3.0.1";
+            const targetLog = changelog.find(item => item.version === currentTag) || changelog[0];
+            
+            let markdown = `## 🚀 夸克网盘全能管理工具 ${targetLog.version} (${targetLog.date})\n\n`;
+            markdown += `> **版本标签**: \`${targetLog.tag}\`\n\n`;
+            markdown += `### 📝 核心更新内容与详细变更明细\n\n`;
+            targetLog.changes.forEach(change => {
+              // 将 html b 标签替换为 markdown 粗体
+              const cleanText = change.replace(/<b>/g, "**").replace(/<\/b>/g, "**");
+              markdown += `- ${cleanText}\n`;
+            });
+            markdown += `\n---\n\n`;
+            markdown += `### 📦 安装使用指南\n`;
+            markdown += `1. 下载下方 Assets 中的 \`quark-batch-rename-${targetLog.version}.zip\` 压缩包并解压。\n`;
+            markdown += `2. 打开 Chrome / Edge 浏览器，访问 \`chrome://extensions/\` 并开启 **开发者模式**。\n`;
+            markdown += `3. 点击 **加载已解压的扩展程序**，选择解压文件夹即可使用。\n`;
+            
+            fs.writeFileSync("RELEASE_NOTES.md", markdown);
+            console.log("✔ 已生成详细的 Release Notes 文件");
+          '
+
       - name: Create GitHub Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
           name: "夸克网盘全能管理工具 ${{ github.ref_name }}"
           tag_name: ${{ github.ref_name }}
+          body_path: RELEASE_NOTES.md
           draft: false
           prerelease: false
-          generate_release_notes: true
           files: |
             release/*.zip
         env:
