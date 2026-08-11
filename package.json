@@ -4,7 +4,7 @@
   "description": "专为夸克网盘打造的全能自动化管理助手，支持批量重命名、批量文件删除、新建文件夹、CSV导入导出、繁简转换与一键撤销。",
   "main": "background.js",
   "scripts": {
-    "check": "node -e 'JSON.parse(require(\"fs\").readFileSync(\"manifest.json\")); console.log(\"✔ Manifest V3 JSON 语法校验通过\");'",
+    "check": "node scripts/verify-versions.js",
     "lint": "npm run check",
     "pack": "node scripts/pack.js",
     "build": "npm run check && npm run pack"
