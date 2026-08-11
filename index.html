@@ -1,0 +1,1815 @@
+<html data-immersive-translate-page-theme="light">
+  <head>
+    <script
+      src="chrome-extension://bpoadfkcbjbfhfodiogcnhhhpibjhbnh/video-subtitle/inject.js"
+      id="imt-subtitles-inject"
+    ></script>
+    <style class="vjs-styles-defaults">
+      .video-js {
+        width: 300px;
+        height: 150px;
+      }
+
+      .vjs-fluid:not(.vjs-audio-only-mode) {
+        padding-top: 56.25%;
+      }
+    </style>
+    <meta charset="utf-8" />
+    <meta name="renderer" content="webkit" />
+    <meta name="force-rendering" content="webkit" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="data-fact" content="clouddrive" />
+    <meta name="spm-id" content="clouddrive" />
+    <meta name="data-spm" content="clouddrive" />
+    <meta name="aplus-waiting" content="MAN" />
+    <meta name="baidu-site-verification" content="codeva-RGQB5FUf7i" />
+    <meta name="multiple-page" />
+    <script>
+      window.__LOCAL_VER = '4.6.3'
+      window.__tenant = 'quark'
+      window.__globalData = { uidWsg: '' }
+
+      ;(function () {
+        function placeholderSupport() {
+          return 'placeholder' in document.createElement('input')
+        }
+        if (!placeholderSupport()) {
+          window.location.href = '/u/upgrade'
+          return
+        }
+      })()
+
+      window.__WPO = window.__WPO || {}
+      window.__WPO.config = {
+        sample: 1,
+        retCode: {
+          'POST cd /1/clouddrive/file/upload/auth': 100000,
+        },
+        spmId: 'clouddriveweb.index',
+        startTime: Date.now(),
+        dynamic: false,
+      }
+    </script>
+    <title>夸克网盘</title>
+    <meta
+      name="description"
+      content="夸克网盘是夸克推出的一款云服务产品，功能包括云存储、高清看剧、文件在线解压、PDF一键转换等。通过夸克网盘可随时随地管理和使用照片、文档、手机资料，目前支持Android、iOS、PC、iPad。"
+    />
+    <meta
+      name="keywords"
+      content="夸克网盘,云存储,云同步,云盘,文件管理,相册备份,手机备份,高清播放,上传下载"
+    />
+    <link
+      rel="shortcut icon"
+      type="image/vnd.microsoft.icon"
+      href="/favicon.ico"
+    />
+    <link
+      href="//g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/vendor.css"
+      rel="stylesheet"
+    />
+    <link
+      href="//g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/index.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* 基于设计师提供的全局变量自动生成，请勿编辑 */
+      /*  辅助色 */
+      /*  会员色 */
+      /*  基础色 */
+      /*  蓝色 */
+      /*  新增基础色 */
+      /*  1 浅色/彩色 Color */
+      /*  固定色 */
+      .spin-default {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .grid-item-selected .grid-item-file {
+        background: rgba(6, 10, 38, 0.04);
+        border-radius: 4px;
+      }
+      .grid-file-selection-visible .ant-checkbox-wrapper {
+        display: block !important;
+      }
+      .grid-file-header {
+        margin-left: 16px;
+        padding-left: 6px;
+        border-radius: 4px;
+      }
+      .grid-file .virtual-list-wrap::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      .grid-file .virtual-list-wrap::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .grid-file .virtual-list-wrap::-webkit-scrollbar-thumb {
+        border-radius: 20px;
+        background: #b4b6ba;
+        border: 2px solid #fff;
+      }
+    </style>
+    <style>
+      /* 基于设计师提供的全局变量自动生成，请勿编辑 */
+      /*  辅助色 */
+      /*  会员色 */
+      /*  基础色 */
+      /*  蓝色 */
+      /*  新增基础色 */
+      /*  1 浅色/彩色 Color */
+      /*  固定色 */
+      .Icon__svg-icon-with-path-fill--YLnLw path {
+        fill: var(--icon-path-fill);
+      }
+      .Icon__svg-icon-with-hover-fill--Q9WMq path {
+        transition: 0.2s all;
+      }
+      .Icon__svg-icon-with-hover-fill--Q9WMq path:hover {
+        fill: var(--icon-hover-fill);
+      }
+      .Icon__svg-icon-with-hover-fill--Q9WMq:hover path {
+        fill: var(--icon-hover-fill);
+      }
+    </style>
+    <style>
+      /* 基于设计师提供的全局变量自动生成，请勿编辑 */
+      /*  辅助色 */
+      /*  会员色 */
+      /*  基础色 */
+      /*  蓝色 */
+      /*  新增基础色 */
+      /*  1 浅色/彩色 Color */
+      /*  固定色 */
+      .quark-cloud-drive-grid-expand {
+        position: absolute;
+        bottom: 50%;
+        right: 50%;
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        padding: 4px;
+        transform: translate(38px, 38px);
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/1.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/11.css"
+    />
+    <script
+      charset="utf-8"
+      src="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/11.js"
+    ></script>
+    <script
+      charset="utf-8"
+      src="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/52.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/40.css"
+    />
+    <script
+      charset="utf-8"
+      src="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/40.js"
+    ></script>
+    <style type="text/css" data-styled-id="rCS154w68a" data-styled-count="1">
+      .rCS154w68a {
+        position: fixed;
+        display: none;
+        border: 1px solid #4af;
+        background: rgba(68, 170, 255, 0.5);
+        z-index: 100;
+      }
+      .rCS154w68a {
+        position: absolute;
+      }
+    </style>
+  </head>
+
+  <body>
+    <svg
+      aria-hidden="true"
+      style="position: absolute; width: 0px; height: 0px; overflow: hidden"
+    >
+      <symbol id="qkdrive-share" viewBox="0 0 1024 1024">
+        <path
+          d="M416 192h-256A32 32 0 0 0 128 224v640a32 32 0 0 0 32 32h640a32 32 0 0 0 32-32v-256H896v256c0 53.0176-42.9824 96-96 96h-640c-53.0176 0-96-42.9824-96-96v-640C64 170.9824 106.9824 128 160 128h256v64z m448-64a32 32 0 0 1 32 32V448h-64V237.25056l-393.37472 393.37472-45.25056-45.25056L786.74944 192H576V128h288z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-trash" viewBox="0 0 1024 1024">
+        <path
+          d="M960 192V256H896v629.33504c0 41.23648-33.42848 74.66496-74.66496 74.66496H266.66496c-41.23648 0-74.66496-33.42848-74.66496-74.66496V256H128V192h832z m-128 64H256v629.33504c0 4.7104 3.05664 8.70912 7.296 10.12224l3.36896 0.54272h554.67008c5.888 0 10.66496-4.77696 10.66496-10.66496V256z m-256 128v384H512V384h64zM384 128h320V64H384V128z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-moveForward_16" viewBox="0 0 1024 1024">
+        <path
+          d="M419.2 217.6a48 48 0 0 1 67.2 9.6l192 256c12.8 17.088 12.8 40.512 0 57.6l-192 256a48 48 0 0 1-76.8-57.6L580.032 512 409.6 284.8a48 48 0 0 1 4.224-62.528L419.2 217.6z"
+          fill="#52565E"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-a-window-macbeifen1" viewBox="0 0 1024 1024">
+        <path
+          d="M850.304 128C910.848 128 960 178.176 960 240v458.688c0 61.824-49.152 112-109.696 112l-301.76-0.064v74.624l219.456 0.064V960H256v-74.688h219.392v-74.688H173.696c-60.544 0-109.696-50.112-109.696-112V240C64 178.176 113.152 128 173.696 128h676.608z m0 74.688H173.696a36.928 36.928 0 0 0-36.544 37.312v458.688c0 20.608 16.384 37.312 36.544 37.312h676.608a36.928 36.928 0 0 0 36.544-37.312V240a36.928 36.928 0 0 0-36.544-37.312z"
+          fill="#1F2026"
+        ></path>
+        <path
+          d="M482.752 651.712a36.224 36.224 0 0 0 58.496 0.32l0.64-1.024L650.88 502.4a37.568 37.568 0 0 0-22.976-59.2l-6.272-0.512H548.544V288H475.52v154.688H402.304c-28.032 0-44.8 30.272-32.64 54.272l3.392 5.44 109.696 149.312z"
+          fill="#1F2026"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-beifen" viewBox="0 0 1024 1024">
+        <path
+          d="M512 0a512 512 0 1 1 0 1024A512 512 0 0 1 512 0z m0 128a384 384 0 1 0 0 768A384 384 0 0 0 512 128z"
+        ></path>
+        <path
+          d="M408.576 449.792l-80-45.248c-32.064-18.176-72.512-1.984-81.92 33.152-31.424 117.952 22.208 244.288 130.944 307.072a277.312 277.312 0 0 0 271.552 4.608 54.912 54.912 0 0 0 20.864-76.032 57.408 57.408 0 0 0-76.8-21.952 163.392 163.392 0 0 1-160.064-2.752 165.568 165.568 0 0 1-72.32-84.8l-3.904-11.776-1.152-4.736 4.48 2.24c19.264 8 41.088 4.864 56.96-7.936l5.76-5.248 4.48-5.44 3.2-4.864a56 56 0 0 0-16.128-72.384l-5.952-3.84zM646.4 279.232a277.248 277.248 0 0 0-272.768-3.84 54.912 54.912 0 0 0-20.48 76.096 57.408 57.408 0 0 0 76.928 21.504 163.392 163.392 0 0 1 160.832 2.432c33.856 19.52 59.072 49.792 72.256 84.736l3.904 11.84 0.768 2.752-1.92-1.024a56.512 56.512 0 0 0-57.152 7.168l-5.76 5.12-4.608 5.376-3.2 4.8a55.744 55.744 0 0 0 10.432 68.736l5.568 4.608 4.864 3.2 78.72 46.08c32.128 18.88 73.152 2.752 82.56-32.768 31.36-117.888-22.272-244.096-130.944-306.816z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-zhankai" viewBox="0 0 1024 1024">
+        <path
+          d="M445.44 642.048l-163.84-204.8A85.333333 85.333333 0 0 1 348.16 298.666667h327.68a85.333333 85.333333 0 0 1 66.56 138.666666L578.56 642.048a85.333333 85.333333 0 0 1-133.12 0z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-shouqi" viewBox="0 0 1024 1024">
+        <path
+          d="M445.44 330.752l-163.84 204.8A85.333333 85.333333 0 0 0 348.16 674.133333h327.68a85.333333 85.333333 0 0 0 66.56-138.666666L578.56 330.752a85.333333 85.333333 0 0 0-133.12 0z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-yincang" viewBox="0 0 1024 1024">
+        <path
+          d="M736.512 471.232a32 32 0 0 1-10.24 38.528l0.896 1.664 45.76 98.016a32 32 0 0 1-56.224 30.4l-1.76-3.328-45.76-98.016a32.192 32.192 0 0 1-1.952-5.44 515.904 515.904 0 0 1-123.392 22.88l-0.64 116.224a32 32 0 0 1-63.808 3.392l-0.192-3.712 0.64-115.84a519.36 519.36 0 0 1-123.232-22.432l-0.544 1.856-1.44 3.456-47.328 98.016a32 32 0 0 1-59.072-24.384l1.44-3.456 47.36-98.016 0.256-0.48a32 32 0 0 1 30.752-55.84 456.224 456.224 0 0 0 183.168 38.24c63.68 0 125.6-13.12 183.168-38.24a32 32 0 0 1 42.144 16.512z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-refresh" viewBox="0 0 1024 1024">
+        <path
+          d="M491.648 256c77.76 0 146.688 38.368 189.568 97.44l5.056 7.2 35.2-17.92c24.32-12.48 51.456 9.312 45.856 35.04l-0.896 3.36-40.96 125.504a31.52 31.52 0 0 1-6.464 10.88l-3.36 3.2-2.848 2.08-3.04 1.76-3.2 1.408-2.144 0.736-3.264 0.8-3.328 0.448-3.392 0.096-3.456-0.288-3.424-0.64-3.456-1.12-2.24-0.928-102.944-52.544a32 32 0 0 1-3.68-54.848l3.68-2.176 49.76-25.44-0.896-1.216c-30.08-40.128-76.672-66.56-129.248-68.704L491.648 320C396.992 320 320 398.656 320 496s76.992 176 171.648 176c31.168 0 61.056-8.512 87.296-24.448a32 32 0 0 1 33.216 54.72A231.456 231.456 0 0 1 491.648 736C361.344 736 256 628.384 256 496 256 363.616 361.344 256 491.648 256z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-xianshi" viewBox="0 0 1024 1024">
+        <path d="M512 512m-80 0a80 80 0 1 0 160 0 80 80 0 1 0-160 0Z"></path>
+        <path
+          d="M512 272c-133.44 0-288 157.216-288 240 0 82.784 154.56 240 288 240 134.944 0 288-153.216 288-240 0-86.784-153.056-240-288-240z m0 64c53.952 0 109.856 29.184 158.4 77.76C708.064 451.52 736 498.016 736 512c0 13.952-27.904 60.48-65.6 98.24-48.544 48.576-104.448 77.76-158.4 77.76-53.472 0-109.152-29.92-158.208-79.808-11.808-12-22.72-24.96-32.192-37.44l-7.712-10.528a364.8 364.8 0 0 1-6.912-10.08l-5.952-9.408a247.68 247.68 0 0 1-2.624-4.384l-4.416-8.064C290.144 520.8 288 515.04 288 512c0-3.04 2.144-8.8 5.984-16.32l4.416-8a247.68 247.68 0 0 1 2.624-4.416l5.952-9.408a364.8 364.8 0 0 1 6.912-10.08l7.68-10.56c9.472-12.448 20.416-25.408 32.224-37.44C402.88 365.952 458.56 336 512 336z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-recently" viewBox="0 0 1024 1024">
+        <path
+          d="M512 133.333333c-29.44 0-58.538667 3.370667-86.869333 9.984l-6.4-3.968-14.634667-62.293333 4.010667-6.4c33.877333-7.978667 68.693333-11.989333 103.893333-11.989333l12.288 0.170666c240.64 6.4 434.474667 200.277333 440.874667 440.874667l0.170666 12.288c0 250.368-202.965333 453.333333-453.333333 453.333333S58.666667 762.368 58.666667 512c0-23.850667 1.834667-47.530667 5.546666-70.826667l6.058667-4.48 63.232 9.941334 4.437333 6.101333A378.666667 378.666667 0 1 0 512 133.333333z m64 117.333334l5.333333 5.333333v288a37.333333 37.333333 0 0 1-37.333333 37.333333H384l-5.333333-5.333333V512L384 506.666667h122.666667V256L512 250.666667h64z m-420.309333-10.325334l51.328 38.229334 1.066666 7.466666a378.24 378.24 0 0 0-43.733333 75.648l-7.04 2.773334-58.709333-25.429334-2.773334-7.04c13.866667-32.085333 31.488-62.464 52.394667-90.538666l7.466667-1.109334z m152.661333-133.461333l7.168 2.346667 28.8 57.173333-2.389333 7.168a379.221333 379.221333 0 0 0-72.96 48.042667l-7.552-0.64-41.088-49.066667 0.682666-7.509333c26.837333-22.485333 56.149333-41.813333 87.338667-57.514667z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-backup" viewBox="0 0 1024 1024">
+        <path
+          d="M499.584 64c164.096 0 305.92 117.12 356.096 284.8C956.096 391.232 1024 495.04 1024 612.416 1024 768 905.408 896 756.608 896a64 64 0 0 1 0-128C832.448 768 896 699.392 896 612.352c0-37.12-11.712-71.296-31.232-98.112a64 64 0 0 1-118.08-34.24c0-32.384-4.608-63.936-13.44-93.824C698.752 269.952 604.544 192 499.584 192 392.32 192 296.64 273.216 264 392.896a64 64 0 0 1-31.232 39.36l-6.784 3.2C168.832 458.304 128 522.56 128 597.376c0 92.032 60.928 164.608 134.208 170.24L271.36 768h164.16c4.224 0 8.448 0.448 12.48 1.28L448 639.872 384 640c-56.96 0-85.568-68.928-45.248-109.248l128-128 5.248-4.672 0.512-0.448-5.76 5.12a64.512 64.512 0 0 1 35.776-18.048A63.808 63.808 0 0 1 512 384l-5.76 0.256L510.912 384H512a65.28 65.28 0 0 1 30.976 8 56.192 56.192 0 0 1 8.512 5.632l0.512 0.448 5.248 4.672 128 128c40.32 40.32 11.776 109.248-45.248 109.248l-64-0.064V960l-0.448 7.488A64 64 0 0 1 448 960l0.064-65.28a63.872 63.872 0 0 1-5.056 0.832L435.584 896H271.36C119.616 896 0 760.64 0 597.312c0-111.168 55.808-211.776 142.848-263.168l6.528-3.648 0.768-2.176c53.312-151.424 183.104-257.28 334.208-264L499.584 64z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-window-mac" viewBox="0 0 1024 1024">
+        <path
+          d="M864 128A96 96 0 0 1 960 224v448a96 96 0 0 1-96 96h-320v64h192v64h-448v-64h192v-64h-320A96 96 0 0 1 64 672v-448A96 96 0 0 1 160 128h704z m0 64h-704a32 32 0 0 0-32 32v448a32 32 0 0 0 32 32h704a32 32 0 0 0 32-32v-448a32 32 0 0 0-32-32z"
+          fill="#1F2026"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-phone" viewBox="0 0 1024 1024">
+        <path
+          d="M768 64a96 96 0 0 1 96 96v704A96 96 0 0 1 768 960H256a96 96 0 0 1-96-96v-704A96 96 0 0 1 256 64h512z m0 64H256a32 32 0 0 0-32 32v704a32 32 0 0 0 32 32h512a32 32 0 0 0 32-32v-704A32 32 0 0 0 768 128z m-64 64v64H320V192h384z"
+          fill="#1F2026"
+        ></path>
+        <path
+          d="M482.752 774.4a36.224 36.224 0 0 0 58.496 0.256l0.64-1.024 109.056-148.544a37.568 37.568 0 0 0-22.976-59.264l-6.272-0.512H548.544V378.688H475.52v186.624H402.304c-28.032 0-44.8 30.336-32.64 54.336l3.392 5.44L482.752 774.4z"
+          fill="#1F2026"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-a-my-setting1x" viewBox="0 0 1024 1024">
+        <path
+          d="M516.8 329.152c-106.048 0-188.288 81.792-188.288 187.584 0 98.56 84.48 178.112 188.288 178.112 96.448 0 178.688-81.792 178.688-178.112 0-103.488-80-187.584-178.688-187.584z m0 128c26.56 0 50.688 25.344 50.688 59.584 0 25.472-24.768 50.112-50.688 50.112-34.752 0-60.288-24-60.288-50.112 0-34.944 24.768-59.584 60.288-59.584z"
+        ></path>
+        <path
+          d="M702.272 32H321.728C274.048 32 230.4 58.368 207.296 100.48L16.96 445.76a137.6 137.6 0 0 0 0 132.352l190.336 345.408A130.88 130.88 0 0 0 321.728 992h380.544c47.68 0 91.264-26.368 114.432-68.48l190.336-345.344a137.6 137.6 0 0 0 0-132.352L816.64 100.416A130.88 130.88 0 0 0 702.272 32z m-380.544 128h380.544c0.512 0 1.472 0.576 2.368 2.176l190.272 345.408a9.6 9.6 0 0 1 0 8.832l-190.272 345.408c-0.896 1.6-1.856 2.176-2.368 2.176H321.728c-0.512 0-1.472-0.576-2.368-2.176L129.088 516.416a9.6 9.6 0 0 1 0-8.832L319.36 162.176c0.896-1.6 1.856-2.176 2.368-2.176z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-a-moveForward1x" viewBox="0 0 1024 1024">
+        <path
+          d="M409.6 204.8a64 64 0 0 1 84.416 6.656L499.2 217.6l192 256a64 64 0 0 1 4.608 69.76l-4.608 7.04-192 256a64 64 0 0 1-106.816-70.08L396.8 729.6 560 512 396.8 294.4a64 64 0 0 1 6.656-84.416L409.6 204.8z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-a-moveBack1x" viewBox="0 0 1024 1024">
+        <path
+          d="M524.8 217.6a64 64 0 0 1 106.816 70.08L627.2 294.4 464 512l163.2 217.6a64 64 0 0 1-6.656 84.416L614.4 819.2a64 64 0 0 1-84.416-6.656L524.8 806.4l-192-256a64 64 0 0 1-4.608-69.76L332.8 473.6l192-256z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-download" viewBox="0 0 1024 1024">
+        <path
+          d="M320 256v64H160a32 32 0 0 0-32 32v512a32 32 0 0 0 32 32h704a32 32 0 0 0 32-32v-512a32 32 0 0 0-32-32H704V256h160A96 96 0 0 1 960 352v512a96 96 0 0 1-96 96h-704A96 96 0 0 1 64 864v-512A96 96 0 0 1 160 256H320z m224-192v416h64l5.44 0.448A32 32 0 0 1 633.6 531.2l-95.488 127.36-0.512 0.896a32.064 32.064 0 0 1-51.2-0.256l-96-128-2.944-4.672A32 32 0 0 1 416 480h64V64h64z"
+          fill="#1F2026"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-export" viewBox="0 0 1024 1024">
+        <path
+          d="M466.752 178.752a64 64 0 0 1 90.496 0l128 128c40.32 40.32 11.776 109.248-45.248 109.248H576v219.712C576 673.472 547.328 704 512 704c-32.832 0-59.904-26.368-63.552-60.288L448 635.712V416L384 416c-54.528 0-83.008-63.104-50.112-103.872l4.864-5.376z"
+        ></path>
+        <path
+          d="M928 576a64 64 0 0 1 63.552 56.512L992 640v128a192 192 0 0 1-180.736 191.68L800 960h-576a192 192 0 0 1-191.68-180.736L32 768v-128a64 64 0 0 1 127.552-7.488L160 640v128a64 64 0 0 0 56.512 63.552L224 832h576a64 64 0 0 0 63.552-56.512L864 768v-128a64 64 0 0 1 64-64z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-music" viewBox="0 0 1024 1024">
+        <path
+          d="M512 90.666667a389.333333 389.333333 0 0 1 389.333333 389.333333v384a35.114667 35.114667 0 0 1-0.426666 5.077333c-0.384 2.56-0.853333 4.010667-4.352 12.672-2.944 4.352-3.797333 5.589333-5.12 7.125334a23.765333 23.765333 0 0 1-2.56 2.56c-1.536 1.322667-2.773333 2.176-8.192 5.674666-7.594667 2.901333-9.045333 3.413333-11.605334 3.84a35.114667 35.114667 0 0 1-5.034666 0.384H768A133.333333 133.333333 0 0 1 634.666667 768v-128c0-73.642667 59.733333-133.333333 133.333333-133.333333h58.666667v-26.666667a314.666667 314.666667 0 0 0-304.298667-314.496L512 165.333333a314.666667 314.666667 0 0 0-314.666667 314.666667v26.666667H256a133.333333 133.333333 0 0 1 133.12 125.781333l0.213333 7.552v128c0 73.642667-59.733333 133.333333-133.333333 133.333333H159.957333a35.114667 35.114667 0 0 1-5.034666-0.426666c-2.56-0.384-4.010667-0.853333-12.672-4.352a69.077333 69.077333 0 0 1-7.125334-5.12 23.765333 23.765333 0 0 1-2.56-2.56 67.2 67.2 0 0 1-5.674666-8.192 55.594667 55.594667 0 0 1-3.84-11.605334 35.114667 35.114667 0 0 1-0.384-5.034666V480A389.333333 389.333333 0 0 1 512 90.666667z m314.666667 490.666666H768c-27.861333 0-51.498667 19.541333-57.301333 45.781334l-0.938667 5.717333-0.426667 7.168v128c0 32.426667 26.282667 58.666667 58.666667 58.666667h58.666667v-245.333334z m-629.333334-0.085333v245.333333L256 826.666667c27.861333 0 51.498667-19.541333 57.301333-45.781334l0.938667-5.717333 0.426667-7.168v-128c0-32.426667-26.282667-58.666667-58.666667-58.666667l-58.666667-0.085333z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-photo" viewBox="0 0 1024 1024">
+        <path
+          d="M864 122.666667a101.333333 101.333333 0 0 1 101.333333 101.333333v576a101.333333 101.333333 0 0 1-101.333333 101.333333H160a101.333333 101.333333 0 0 1-101.333333-101.333333V224A101.333333 101.333333 0 0 1 160 122.666667h704z m-425.045333 301.397333l-314.581334 290.005333-1.706666 3.925334v82.005333c0 20.608 16.725333 37.333333 37.333333 37.333333h704a37.333333 37.333333 0 0 0 37.333333-37.333333v-81.578667l-1.834666-4.010666-8.874667-7.850667-5.290667-4.608-5.333333-4.736-22.485333-19.84-10.112-8.917333-5.12-4.522667-191.872-169.301333-7.552-6.613334-7.296 0.256-100.821334 102.613334-38.058666-37.418667 37.12-37.632-0.128-7.594667-87.424-84.138666-7.296-0.042667z m425.045333-237.397333H160a37.333333 37.333333 0 0 0-37.333333 37.333333v419.072l8.96-8.234667L425.045333 364.373333a26.666667 26.666667 0 0 1 36.565334 0.426667l109.525333 105.472 7.509333-0.085333 40.192-40.874667a26.666667 26.666667 0 0 1 36.693334-1.28l198.826666 175.402667 6.186667 5.504 31.957333 28.16 8.874667 7.850666v-11.818666l-0.042667-409.130667a37.333333 37.333333 0 0 0-37.333333-37.333333z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-video" viewBox="0 0 1024 1024">
+        <path
+          d="M512 58.666667c250.368 0 453.333333 202.965333 453.333333 453.333333S762.368 965.333333 512 965.333333 58.666667 762.368 58.666667 512 261.632 58.666667 512 58.666667z m0 74.666666a378.666667 378.666667 0 1 0 0 757.333334 378.666667 378.666667 0 0 0 0-757.333334zM440.874667 335.36c5.802667 0 11.52 1.706667 16.341333 4.821333l218.24 140.288a30.208 30.208 0 0 1 0.853333 50.304l-218.24 150.656a30.208 30.208 0 0 1-47.402666-24.874666v-290.986667c0-16.64 13.525333-30.208 30.208-30.208z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-folder" viewBox="0 0 1024 1024">
+        <path
+          d="M393.685333 122.666667c45.781333 0 85.845333 30.677333 97.834667 74.837333l14.293333 53.162667h358.186667c50.048 0 92.117333 36.437333 100.010667 85.12l0.853333 6.698666 0.469333 9.514667v448a101.333333 101.333333 0 0 1-101.333333 101.333333H160a101.333333 101.333333 0 0 1-101.333333-101.333333V224A101.333333 101.333333 0 0 1 160 122.666667h233.685333z m0 74.666666H160a26.666667 26.666667 0 0 0-26.666667 26.666667v576c0 14.72 11.946667 26.666667 26.666667 26.666667h704c14.72 0 26.666667-11.946667 26.666667-26.666667V352a26.666667 26.666667 0 0 0-26.666667-26.666667h-386.688a37.333333 37.333333 0 0 1-36.010667-27.562666L419.413333 217.045333a26.666667 26.666667 0 0 0-25.728-19.712z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-finish" viewBox="0 0 1024 1024">
+        <path
+          d="M408.448 64H128a128 128 0 0 0-128 128v640a128 128 0 0 0 128 128h768a128 128 0 0 0 128-128V320l-0.32-9.6A128 128 0 0 0 896 192H551.552l-28.608-57.216A128 128 0 0 0 408.448 64zM128 192h280.448l46.336 92.608A64 64 0 0 0 512 320h384v512H128V192z"
+        ></path>
+        <path
+          d="M572.8 409.6a64 64 0 0 1 106.816 70.08l-4.416 6.72-144 192a64 64 0 0 1-90.688 11.968l-5.76-5.12-96-96a64 64 0 0 1 84.48-95.808l6.016 5.312 43.84 43.776L572.8 409.6z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-file" viewBox="0 0 1024 1024">
+        <path
+          d="M634.282667 58.666667c18.432 0 27.221333 0.725333 37.418666 3.114666 10.496 2.474667 20.053333 6.485333 29.184 12.288 8.832 5.632 15.488 11.434667 28.373334 24.576l134.101333 137.386667c12.629333 12.928 18.090667 19.498667 23.424 28.16 5.504 8.96 9.301333 18.346667 11.648 28.586667 2.218667 9.941333 2.901333 18.474667 2.901333 36.48v516.693333c0 31.573333-3.328 48.896-12.970666 66.901333a95.488 95.488 0 0 1-39.509334 39.509334c-18.005333 9.642667-35.328 12.970667-66.901333 12.970666H242.048c-31.573333 0-48.896-3.328-66.901333-12.970666a95.488 95.488 0 0 1-39.509334-39.509334c-9.642667-18.005333-12.970667-35.328-12.970666-66.901333V178.048c0-31.573333 3.328-48.896 12.970666-66.901333 9.045333-16.938667 22.570667-30.464 39.509334-39.509334 18.005333-9.642667 35.328-12.970667 66.901333-12.970666h392.234667z m5.162666 74.666666H236.032c-14.762667 0.256-20.352 1.28-25.685333 4.138667a20.821333 20.821333 0 0 0-8.874667 8.874667c-3.2 5.973333-4.138667 12.330667-4.138667 31.701333l0.042667 675.072c0.256 13.909333 1.28 19.242667 4.096 24.533333 2.133333 3.925333 4.949333 6.784 8.874667 8.874667 5.973333 3.2 12.330667 4.138667 31.701333 4.138667h539.904c19.370667 0 25.728-0.938667 31.701333-4.138667a20.821333 20.821333 0 0 0 8.874667-8.874667c3.2-5.973333 4.138667-12.330667 4.138667-31.701333V329.258667c0-12.288-0.256-16.341333-1.066667-20.010667a18.389333 18.389333 0 0 0-2.432-5.973333c-1.962667-3.2-4.650667-6.272-13.226667-15.061334l-134.144-137.386666c-8.704-8.96-11.776-11.733333-15.018666-13.781334a18.517333 18.517333 0 0 0-6.101334-2.56 67.882667 67.882667 0 0 0-15.232-1.152zM512 570.666667l5.333333 5.333333V640l-5.333333 5.333333H320L314.666667 640v-64l5.333333-5.333333H512z m192-128l5.333333 5.333333V512l-5.333333 5.333333h-384L314.666667 512v-64l5.333333-5.333333h384z m0-128l5.333333 5.333333V384l-5.333333 5.333333h-384L314.666667 384V320l5.333333-5.333333h384z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-download_offline" viewBox="0 0 1024 1024">
+        <path
+          d="M371.2 0l-10.88 0.32A179.2 179.2 0 0 0 192 179.2L191.936 320h-4.352a179.2 179.2 0 0 0-126.72 305.92l324.48 324.416a179.2 179.2 0 0 0 253.376 0l324.416-324.48a179.2 179.2 0 0 0 52.48-126.656l-0.32-10.88A179.2 179.2 0 0 0 836.416 320h-4.48L832 179.2A179.2 179.2 0 0 0 652.8 0H371.2z m281.6 128a51.2 51.2 0 0 1 51.2 51.2V448h132.416a51.2 51.2 0 0 1 36.16 87.424l-324.352 324.352a51.2 51.2 0 0 1-72.448 0L151.424 535.424A51.2 51.2 0 0 1 187.52 448H320L320 179.2a51.2 51.2 0 0 1 51.2-51.2h281.6z"
+        ></path>
+        <path
+          d="M512 288a64 64 0 0 1 63.552 56.512L576 352v162.176l-0.192 2.688L576 512a64.512 64.512 0 0 1-13.632 39.552l-1.472 1.728a56.32 56.32 0 0 1-8.896 8.64l-6.08 4.352-128 80A64 64 0 0 1 344 542.08l6.08-4.352L448 476.48V352a64 64 0 0 1 64-64z"
+        ></path>
+      </symbol>
+      <symbol id="qkdrive-bt" viewBox="0 0 1024 1024">
+        <path
+          d="M696.021333 290.688a306.688 306.688 0 0 1 10.325334 613.12l-10.325334 0.213333H328.021333a306.688 306.688 0 0 1 0-613.333333V352a245.333333 245.333333 0 0 0 0 490.666667h368a245.333333 245.333333 0 0 0 0-490.666667V290.645333z m-293.717333 153.301333c51.285333 0 92.885333 32.298667 92.885333 81.792 0 23.722667-9.685333 42.538667-25.642666 56.021334 21.845333 13.482667 36.138667 35.584 36.138666 64.597333 0 48.512-38.826667 80.896-88.192 83.626667l-6.826666 0.213333H287.146667v-286.250667h115.2z m334.592 0v61.354667h-75.690667v224.853333h-67.242666v-224.853333h-75.648v-61.354667h218.581333z m-326.186667 170.112h-56.32v54.784h56.32c16.810667 0 27.733333-11.434667 27.733334-27.392s-10.922667-27.392-27.733334-27.392z m-8.405333-108.8H354.346667v50.773334H402.346667c15.104 0 25.6-10.666667 25.6-25.386667s-10.069333-25.344-25.6-25.344z m355.029333-337.28h-81.792a132.906667 132.906667 0 0 0-132.864 132.864v40.874667H481.28v-40.874667a132.906667 132.906667 0 0 0-132.864-132.864H266.666667V106.666667h81.792c68.693333 0 129.066667 35.669333 163.584 89.514666A193.792 193.792 0 0 1 675.541333 106.666667h81.792v61.354666z"
+        ></path>
+      </symbol>
+    </svg>
+    <div id="ice-container">
+      <section class="basic-v2-layout ant-layout ant-layout-has-sider">
+        <aside
+          class="BasicV2Layout--aside-layout--1-g34dY ant-layout-sider ant-layout-sider-light ant-layout-sider-has-trigger"
+          style="
+            flex: 0 0 220px;
+            max-width: 220px;
+            min-width: 220px;
+            width: 220px;
+          "
+        >
+          <div class="ant-layout-sider-children">
+            <div class="aside-top">
+              <div class="LogoV2--logo-wrap--3aBZqhU">
+                <div class="LogoV2--logo--24CGeOR">
+                  <img
+                    src="https://g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/assets/5a4c78591db6d6ff91a777f27bdeec6f.png"
+                    alt="夸克网盘"
+                    height="36px"
+                    width="120px"
+                  />
+                </div>
+              </div>
+              <div class="client-header-btn-group">
+                <div class="client-header-user-info ant-dropdown-trigger">
+                  <div
+                    class="widget-avatar-wrap"
+                    style="width: 40px; height: 40px"
+                  >
+                    <div
+                      class="avatar-border"
+                      style="
+                        width: 40px;
+                        height: 40px;
+                        background-image: url('https://image.quark.cn/s/uae/g/3o/broccoli/resource/202306/9bdf9850-1654-11ee-81e7-a167056c2d24.png');
+                      "
+                    >
+                      <img
+                        src="//image.quark.cn/o/uop/1G7uS/;;0,uop/g/uop/avatar/1f4042a786c7038485a137d2ccffb75a.jpg;3,60"
+                        class="avatar"
+                        style="width: 36px; height: 36px"
+                      />
+                    </div>
+                  </div>
+                  <div class="client-header-right-wrap">
+                    <div class="client-name-wrap">
+                      <span class="name" title="LZ7工作室">LZ7工作室</span
+                      ><span class="vip-icon-wrap pos-change"
+                        ><img
+                          src="https://img.alicdn.com/imgextra/i3/O1CN01GjbAFb1GBWAiEeQrU_!!6000000000584-2-tps-90-90.png"
+                          class="responsive"
+                          title="SVIP"
+                      /></span>
+                    </div>
+                    <div>
+                      <div class="UserInfoV2--progress-wrap--3njjTTi">
+                        <div
+                          class="widget-progress widget-progress-SUPER_VIP undefined"
+                          style="width: 100%; height: 6px"
+                        >
+                          <div
+                            class="widget-progress-inner"
+                            style="width: 59.552%"
+                          ></div>
+                        </div>
+                      </div>
+                      <div class="UserInfoV2--volume-tit--22wiOUF">
+                        <span class="UserInfoV2--tit-left--vRXtBmz"
+                          >15.5TB/26TB</span
+                        ><span class="UserInfoV2--tit-right--2TMNkGW"
+                          >查看</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="page-nav-v2">
+                <ul
+                  class="ant-menu ant-menu-light ant-menu-root ant-menu-inline"
+                  role="menu"
+                  style="border: 0px"
+                >
+                  <li class="ant-menu-item-group">
+                    <div class="ant-menu-item-group-title" title="云文件">
+                      云文件
+                    </div>
+                    <ul class="ant-menu-item-group-list">
+                      <li
+                        class="ant-menu-item ant-menu-item-selected"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/all"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-folder"></use></svg></i
+                          ><span>全部文件</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/recent"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use
+                                xlink:href="#qkdrive-recently"
+                              ></use></svg></i
+                          ><span>最近</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/video"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-video"></use></svg></i
+                          ><span>视频</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/img"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-photo"></use></svg></i
+                          ><span>图片</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/doc"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-file"></use></svg></i
+                          ><span>文档</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/music"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-music"></use></svg></i
+                          ><span>音频</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/bt"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-bt"></use></svg></i
+                          ><span>BT种子</span></a
+                        >
+                      </li>
+                      <div class="common-tips-wrap recent_tab_update_tips">
+                        <span class="tips-title">手机最近刚备份了185个文件</span
+                        ><span class="tips-close"></span>
+                      </div>
+                    </ul>
+                  </li>
+                  <li
+                    class="PageNavV2--divide-line--655TRvM ant-menu-item-divider"
+                  ></li>
+                  <li class="ant-menu-item-group">
+                    <div class="ant-menu-item-group-title" title=""></div>
+                    <ul class="ant-menu-item-group-list">
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/myshare"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-share"></use></svg></i
+                          ><span>我的分享</span></a
+                        >
+                      </li>
+                      <li
+                        class="ant-menu-item"
+                        role="menuitem"
+                        style="padding-left: 24px"
+                      >
+                        <a
+                          class="PageNavV2--nav-link-item--1kswh0u"
+                          href="#/list/trash"
+                          ><i class="anticon" style="font-size: 16px"
+                            ><svg
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                              focusable="false"
+                              class=""
+                            >
+                              <use xlink:href="#qkdrive-trash"></use></svg></i
+                          ><span>回收站</span></a
+                        >
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="ant-layout-sider-trigger" style="width: 220px">
+            <div class="trigger-icon" style="line-height: 40px">
+              <img
+                src="//image.quark.cn/s/uae/g/3o/broccoli/resource/202204/40ce61b0-b71b-11ec-8bef-d9a13bbd84ec.png"
+                style="width: 16px; height: 16px; transform: rotate(180deg)"
+              />
+            </div>
+          </div>
+        </aside>
+        <section class="basic-v2-layout ant-layout">
+          <main class="ant-layout-content">
+            <div class="BasicV2Layout--content-container--2oG_qpD">
+              <div class="SectionHeaderController--section-header--g312qJc">
+                <div
+                  class="SectionHeaderController--section-header-left--1nc208f"
+                ></div>
+                <div
+                  class="SectionHeaderController--section-header-right--QIJ-wNk"
+                >
+                  <div class="file-search-box">
+                    <div class="fsbox-icon-search"></div>
+                    <input
+                      class="ant-input fsearchbox-input"
+                      placeholder="搜索全部文件"
+                      type="text"
+                      value=""
+                    />
+                  </div>
+                  <div>
+                    <div class="pc-member-entrance">
+                      <span
+                        class="widget-button-text button-text"
+                        style="
+                          background-image: linear-gradient(
+                            270deg,
+                            rgb(166, 77, 0),
+                            rgb(203, 128, 0) 50%,
+                            rgb(166, 77, 0) 100%
+                          );
+                          background-clip: text;
+                          -webkit-text-fill-color: transparent;
+                          color: transparent;
+                        "
+                        >会员中心</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="DownloadDropDown--download-platform-container--1nQGBsO"
+                  >
+                    <div class="DownloadDropDown--download-icon-wrap--SUTJflZ">
+                      <span
+                        class="DownloadDropDown--driver-icon-wrap--1GpuGCi ant-dropdown-trigger"
+                        ><i class="anticon" style="font-size: 16px"
+                          ><svg
+                            width="1em"
+                            height="1em"
+                            fill="currentColor"
+                            aria-hidden="true"
+                            focusable="false"
+                            class=""
+                          >
+                            <use xlink:href="#qkdrive-phone"></use></svg></i
+                      ></span>
+                    </div>
+                    <div class="DownloadDropDown--download-icon-wrap--SUTJflZ">
+                      <span
+                        class="DownloadDropDown--driver-icon-wrap--1GpuGCi ant-dropdown-trigger"
+                        ><i class="anticon" style="font-size: 16px"
+                          ><svg
+                            width="1em"
+                            height="1em"
+                            fill="currentColor"
+                            aria-hidden="true"
+                            focusable="false"
+                            class=""
+                          >
+                            <use
+                              xlink:href="#qkdrive-a-window-macbeifen1"
+                            ></use></svg></i
+                      ></span>
+                    </div>
+                  </div>
+                  <span class="SectionHeaderController--icon-download--1Z-OAHd"
+                    ><i
+                      class="anticon SectionHeaderController--icon-download-i--3cK6Pqp"
+                      style="font-size: 16px"
+                      ><svg
+                        width="1em"
+                        height="1em"
+                        fill="currentColor"
+                        aria-hidden="true"
+                        focusable="false"
+                        class=""
+                      >
+                        <use xlink:href="#qkdrive-window-mac"></use></svg></i
+                    >打开客户端</span
+                  >
+                </div>
+                <div></div>
+                <div></div>
+              </div>
+              <div class="section-main">
+                <div class="section-header list-header">
+                  <div class="btn-operate">
+                    <div class="btn-main">
+                      <div
+                        class="ant-dropdown-trigger"
+                        style="display: inline-block"
+                      >
+                        <span class=""
+                          ><div
+                            class="ant-upload ant-upload-select ant-upload-select-text"
+                          >
+                            <span tabindex="0" class="ant-upload" role="button"
+                              ><input
+                                id="ListHeader-file"
+                                type="file"
+                                accept=""
+                                multiple=""
+                                style="display: none"
+                              /><button
+                                type="button"
+                                class="ant-btn btn-file btn-file-primary upload-btn ant-btn-primary"
+                              >
+                                <img
+                                  class="btn-icon"
+                                  src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMTZweCIgaGVpZ2h0PSIxNnB4IiB2aWV3Qm94PSIwIDAgMTYgMTYiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+5Zu+5qCHLzE2L+a3u+WKoC/pgJrnlKg8L3RpdGxlPgogICAgPGcgaWQ9IuWbvuaghy8xNi/mt7vliqAv6YCa55SoIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8cGF0aCBkPSJNOC41LDIgTDguNSw3LjUgTDE0LDcuNSBMMTQsOC41IEw4LjUsOC41IEw4LjUsMTQgTDcuNSwxNCBMNy41LDguNSBMMiw4LjUgTDIsNy41IEw3LjUsNy41IEw3LjUsMiBMOC41LDIgWiIgaWQ9IuW9oueKtue7k+WQiCIgZmlsbD0iI2ZmZiIgZmlsbC1ydWxlPSJub256ZXJvIj48L3BhdGg+CiAgICA8L2c+Cjwvc3ZnPgo="
+                                /><span>上传文件</span>
+                              </button></span
+                            >
+                          </div></span
+                        >
+                      </div>
+                      <button
+                        type="button"
+                        class="ant-btn btn-file btn-create-folder"
+                      >
+                        <img
+                          class="btn-icon"
+                          src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMTZweCIgaGVpZ2h0PSIxNnB4IiB2aWV3Qm94PSIwIDAgMTYgMTYiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+5Zu+5qCHLzE2L+a3u+WKoC/mlrDlu7rmlofku7blpLk8L3RpdGxlPgogICAgPGcgaWQ9IuWbvuaghy8xNi/mt7vliqAv5paw5bu65paH5Lu25aS5IiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KICAgICAgICA8cGF0aCBkPSJNNi4xNjY2NjY2NywyIEM2LjgzMzMzMzMzLDIgNy40MiwyLjQ0IDcuNjA2NjY2NjcsMy4wOCBMNy44NzQsNCBMMTMuNSw0IEMxNC4yNzk2OTYxLDQgMTQuOTIwNDQ4Nyw0LjU5NDg4ODA4IDE0Ljk5MzEzMzQsNS4zNTU1Mzk5OSBMMTUsNS41IEwxNSwxMi41IEMxNSwxMy4zMjg0MjcxIDE0LjMyODQyNzEsMTQgMTMuNSwxNCBMMi41LDE0IEMxLjY3MTU3Mjg4LDE0IDEsMTMuMzI4NDI3MSAxLDEyLjUgTDEsMy41IEMxLDIuNjcxNTcyODggMS42NzE1NzI4OCwyIDIuNSwyIEw2LjE2NjY2NjY3LDIgWiBNNi4xNjY2NjY2NywzIEwyLjUsMyBDMi4yMjM4NTc2MywzIDIsMy4yMjM4NTc2MyAyLDMuNSBMMiwxMi41IEMyLDEyLjc3NjE0MjQgMi4yMjM4NTc2MywxMyAyLjUsMTMgTDEzLjUsMTMgQzEzLjc3NjE0MjQsMTMgMTQsMTIuNzc2MTQyNCAxNCwxMi41IEwxNCw1LjUgQzE0LDUuMjIzODU3NjMgMTMuNzc2MTQyNCw1IDEzLjUsNSBMNy41LDUgQzcuMjc3Nzc3NzgsNSA3LjA4MjIyMjIyLDQuODUzMzMzMzMgNy4wMiw0LjY0IEw2LjY0NjY2NjY3LDMuMzYgQzYuNTg0NDQ0NDQsMy4xNDY2NjY2NyA2LjM4ODg4ODg5LDMgNi4xNjY2NjY2NywzIFogTTcsNiBMNyw4IEw5LDggTDksOSBMNyw5IEw3LDExIEw2LDExIEw2LDkgTDQsOSBMNCw4IEw2LDggTDYsNiBMNyw2IFoiIGlkPSLlvaLnirbnu5PlkIgiIGZpbGw9IiMxRjIwMjYiIGZpbGwtcnVsZT0ibm9uemVybyI+PC9wYXRoPgogICAgPC9nPgo8L3N2Zz4="
+                        /><span>新建文件夹</span></button
+                      ><button
+                        type="button"
+                        class="ant-btn btn-file btn-add-backup"
+                      >
+                        <img
+                          class="btn-icon"
+                          src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTMuMTQ3NDYgMy4xNDY0OEMzLjQ2MjY1IDIuODMxNSA0LjAwMTk1IDMuMDU0NTUgNC4wMDE5NSAzLjVWNS41QzQuMDAxOTUgNS44NzE1NiAzLjYxMDkxIDYuMTEzMTQgMy4yNzgzMiA1Ljk0NzI3TDIuNTc5MSA1LjU5NzY2TDIuNTM5MDYgNS42NzM4M0MyLjIyNjM0IDYuMzIzNTMgMi4wNDQ0NCA3LjAxMjU2IDIuMDA3ODEgNy43Mjk0OUwyLjAwMDk4IDhDMi4wMDA5OCAxMS4zMTM3IDQuNjg4OTggMTQgOC4wMDQ4OCAxNEM4LjgwNDk4IDE0IDkuNTgyMzYgMTMuODQzNiAxMC4zMDQ3IDEzLjU0MzlMMTAuNjg4NSAxNC40Njc4QzkuODQ1MDYgMTQuODE3NyA4LjkzNzI0IDE1IDguMDA0ODggMTVDNC4xMzYzMyAxNSAxIDExLjg2NiAxIDhDMSA2LjE3ODU1IDEuNzgwNDQgNC41MTI3IDMuMTQ3NDYgMy4xNDY0OFpNNy45OTUxMiAxQzExLjg2MzcgMSAxNSA0LjEzNDAxIDE1IDhDMTUgOS44MjE0NSAxNC4yMTk2IDExLjQ4NzMgMTIuODUyNSAxMi44NTM1QzEyLjUzNzMgMTMuMTY4NSAxMS45OTggMTIuOTQ1NSAxMS45OTggMTIuNVYxMC41QzExLjk5OCAxMC4xMjg0IDEyLjM4OTEgOS44ODY4NiAxMi43MjE3IDEwLjA1MjdMMTMuNDIwOSAxMC40MDIzTDEzLjQ2MDkgMTAuMzI2MkMxMy43NzM3IDkuNjc2NDcgMTMuOTU1NiA4Ljk4NzQ0IDEzLjk5MjIgOC4yNzA1MUwxMy45OTkgOEMxMy45OTkgNC42ODYyOSAxMS4zMTEgMiA3Ljk5NTEyIDJDNy4xOTUwMiAyLjAwMDAzIDYuNDE3NjQgMi4xNTY0MSA1LjY5NTMxIDIuNDU2MDVMNS4zMTE1MiAxLjUzMjIzQzYuMTU0OTQgMS4xODIzNCA3LjA2Mjc2IDEuMDAwMDMgNy45OTUxMiAxWiIgZmlsbD0iIzA2MEEyNiIgZmlsbC1vcGFjaXR5PSIwLjgiLz4KPC9zdmc+Cg=="
+                        /><span>添加备份</span>
+                      </button>
+                    </div>
+                    <div class="btn-group">
+                      <div class="ant-btn-group">
+                        <button type="button" class="ant-btn btn-file">
+                          <span>下载</span></button
+                        ><button type="button" class="ant-btn btn-file">
+                          <span>分享</span></button
+                        ><button type="button" class="ant-btn btn-file">
+                          <span>删除</span></button
+                        ><button type="button" class="ant-btn btn-file">
+                          <span>重命名</span></button
+                        ><button type="button" class="ant-btn btn-file">
+                          <span>移动到...</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="header-search-user"></div>
+                </div>
+                <div class="file-list file-list-all">
+                  <div class="file-list-breadcrumb">
+                    <div class="primary">
+                      <span
+                        class="allFiles bcrumb-filename fl-direct"
+                        title="全部文件"
+                        ><a>全部文件</a></span
+                      >
+                      <div class="iconArrow">/</div>
+                      <span
+                        class="allFiles bcrumb-filename fl-direct"
+                        title="视频"
+                        ><a>视频</a></span
+                      >
+                      <div class="iconArrow">/</div>
+                      <span
+                        class="allFiles bcrumb-filename fl-direct"
+                        title="电视剧"
+                        ><a>电视剧</a></span
+                      >
+                      <div class="iconArrow">/</div>
+                      <span
+                        class="allFiles bcrumb-filename fl-direct"
+                        title="纸.钞.屋：柏.林 第二季 (2026)"
+                        ><a>纸.钞.屋：柏.林 第二季 (2026)</a></span
+                      >
+                      <div class="iconArrow">/</div>
+                      <span
+                        class="allFiles bcrumb-filename fl-direct"
+                        title="2160p WEB-DL H265 DDP 5.1 Atmos"
+                        >2160p WEB-DL H265 DDP 5.1 Atmos</span
+                      >
+                    </div>
+                    <div class="side">
+                      <div
+                        class="fl-sort fl-sort-select ant-dropdown-trigger"
+                      ></div>
+                      <div class="fl-refresh">
+                        <img
+                          src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iMTZweCIgaGVpZ2h0PSIxNnB4IiB2aWV3Qm94PSIwIDAgMTYgMTYiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+5Zu+5qCHLzE2L+WIt+aWsDwvdGl0bGU+CiAgICA8ZyBpZD0i5Zu+5qCHLzE2L+WIt+aWsCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPHBhdGggZD0iTTgsMSBDMTEuODY1OTkzMiwxIDE1LDQuMTM0MDA2NzUgMTUsOCBDMTUsOC45MzA5MDc1NCAxNC44MTc5MzMsOS44MzcyOTEzMSAxNC40Njg2ODc5LDEwLjY3OTUzMTMgQzE0LjMxODcyMTUsMTEuMDQxMTkwNSAxMy44MzAwODYsMTEuMDk3OTczMyAxMy42MDExODE0LDEwLjc4MDM0MTUgTDEyLjE5ODUyNjYsOC44MzM5OTU0NiBDMTEuOTYwMTkxMyw4LjUwMzI3NzY1IDEyLjE5NjUxNzMsOC4wNDE2NjY2NyAxMi42MDQxNjY3LDguMDQxNjY2NjcgTDEzLjk5OSw4LjA0MSBMMTQsOCBDMTQsNC43NjE2MDMwNiAxMS40MzQ0MjUxLDIuMTIyNDI4MjQgOC4yMjQ5MzgyNiwyLjAwNDEzODQ3IEw4LDIgQzQuNjg2MjkxNSwyIDIsNC42ODYyOTE1IDIsOCBDMiwxMS4zMTM3MDg1IDQuNjg2MjkxNSwxNCA4LDE0IEM4Ljc5ODg3NjcyLDE0IDkuNTc1MTUyNzUsMTMuODQ0MDY4IDEwLjI5NjQ5NDIsMTMuNTQ0OTU1IEwxMC42Nzk1MzEzLDE0LjQ2ODY4NzkgQzkuODM3MjkxMzEsMTQuODE3OTMzIDguOTMwOTA3NTQsMTUgOCwxNSBDNC4xMzQwMDY3NSwxNSAxLDExLjg2NTk5MzIgMSw4IEMxLDQuMTM0MDA2NzUgNC4xMzQwMDY3NSwxIDgsMSBaIiBpZD0i6Lev5b6EIiBmaWxsPSIjMUYyMDI2IiBmaWxsLXJ1bGU9Im5vbnplcm8iPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="selecto-selection rCS154w68a"
+                    style="
+                      position: fixed;
+                      left: 0px;
+                      top: 0px;
+                      transform: translate(936px, 259px);
+                      display: none;
+                    "
+                  ></div>
+                  <div
+                    class="ant-table-wrapper table-fixed-content table-list-all"
+                  >
+                    <div class="ant-spin-nested-loading">
+                      <div class="ant-spin-container">
+                        <div
+                          class="ant-table ant-table-default ant-table-fixed-header ant-table-scroll-position-left ant-table-layout-fixed"
+                        >
+                          <div class="ant-table-content">
+                            <div class="ant-table-scroll">
+                              <div
+                                class="ant-table-header ant-table-hide-scrollbar"
+                                style="
+                                  margin-bottom: -15px;
+                                  padding-bottom: 0px;
+                                  min-width: 10px;
+                                  overflow: scroll;
+                                "
+                              >
+                                <table class="">
+                                  <colgroup>
+                                    <col class="ant-table-selection-col" />
+                                    <col />
+                                    <col style="width: 15%; min-width: 15%" />
+                                    <col style="width: 20%; min-width: 20%" />
+                                  </colgroup>
+                                  <thead class="ant-table-thead">
+                                    <tr class="tr-header">
+                                      <th class="ant-table-selection-column">
+                                        <span class="ant-table-header-column"
+                                          ><div>
+                                            <span class="ant-table-column-title"
+                                              ><div class="ant-table-selection">
+                                                <label
+                                                  class="ant-checkbox-wrapper"
+                                                  ><span
+                                                    class="ant-checkbox ant-checkbox-indeterminate"
+                                                    ><input
+                                                      type="checkbox"
+                                                      class="ant-checkbox-input"
+                                                      value="" /><span
+                                                      class="ant-checkbox-inner"
+                                                    ></span></span
+                                                ></label></div></span
+                                            ><span
+                                              class="ant-table-column-sorter"
+                                            ></span></div
+                                        ></span>
+                                      </th>
+                                      <th class="td-file td-file-sort">
+                                        <span class="ant-table-header-column"
+                                          ><div>
+                                            <span class="ant-table-column-title"
+                                              ><div class="table-order">
+                                                文件名
+                                              </div></span
+                                            ><span
+                                              class="ant-table-column-sorter"
+                                            ></span></div
+                                        ></span>
+                                      </th>
+                                      <th
+                                        class="td-file ant-table-row-cell-break-word"
+                                      >
+                                        <span class="ant-table-header-column"
+                                          ><div>
+                                            <span class="ant-table-column-title"
+                                              >大小</span
+                                            ><span
+                                              class="ant-table-column-sorter"
+                                            ></span></div
+                                        ></span>
+                                      </th>
+                                      <th
+                                        class="td-file td-file-sort ant-table-row-cell-break-word ant-table-row-cell-last"
+                                      >
+                                        <span class="ant-table-header-column"
+                                          ><div>
+                                            <span class="ant-table-column-title"
+                                              ><div
+                                                class="table-order order-desc"
+                                              >
+                                                修改日期
+                                              </div></span
+                                            ><span
+                                              class="ant-table-column-sorter"
+                                            ></span></div
+                                        ></span>
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                </table>
+                              </div>
+                              <div
+                                tabindex="-1"
+                                class="ant-table-body"
+                                style="
+                                  max-height: calc(-246px + 100vh);
+                                  overflow-y: scroll;
+                                "
+                              >
+                                <div
+                                  vt="[849031110]"
+                                  style="
+                                    position: relative;
+                                    transform: matrix(1, 0, 0, 1, 0, 0);
+                                    height: 490px;
+                                    max-height: 490px;
+                                  "
+                                >
+                                  <table
+                                    class=""
+                                    style="position: relative; top: 0px"
+                                  >
+                                    <colgroup>
+                                      <col class="ant-table-selection-col" />
+                                      <col />
+                                      <col style="width: 15%; min-width: 15%" />
+                                      <col style="width: 20%; min-width: 20%" />
+                                    </colgroup>
+                                    <tbody class="ant-table-tbody">
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="db5b70db112c46629793015aa01a5aeb"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=db5b70db112c46629793015aa01a5aeb&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="123.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                123.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          6G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-08-10 17:05
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-table-row-selected ant-dropdown-trigger"
+                                        data-row-key="93420283adcc45c59440f3d228eb5314"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label
+                                              class="ant-checkbox-wrapper ant-checkbox-wrapper-checked"
+                                              ><span
+                                                class="ant-checkbox ant-checkbox-checked"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=93420283adcc45c59440f3d228eb5314&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E02 - 第 2 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E02 - 第 2 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          4.4G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="523d77a3ea6044ff8b5073eb8401e56c"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=523d77a3ea6044ff8b5073eb8401e56c&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E03 - 第 3 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E03 - 第 3 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          5.2G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="ad038d7becf44ca18bb3cbc31612788d"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=ad038d7becf44ca18bb3cbc31612788d&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E04 - 第 4 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E04 - 第 4 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          6.3G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="42d428e3f9674cad8925538d6a3517f2"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=42d428e3f9674cad8925538d6a3517f2&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E05 - 第 5 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E05 - 第 5 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          5.7G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="1546f1876c7e4cd99a830f14c88643a3"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=1546f1876c7e4cd99a830f14c88643a3&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E06 - 第 6 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E06 - 第 6 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          5.6G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="6579d196ba0b4b14a29c74ac7b6de450"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=6579d196ba0b4b14a29c74ac7b6de450&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E07 - 第 7 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E07 - 第 7 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          5.3G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr
+                                        class="ant-table-row ant-table-row-level-0 ant-dropdown-trigger"
+                                        data-row-key="f158bfb06ba8441891a10ffad951c1a1"
+                                        pathname="/list/all/6c8b7f526b834f33aedb25daa1a965f9-视频/81eedb90b5b34aff9939ae7038b63315-电视剧/3eb1821690dc4054ba9f406437558c55-纸.钞.屋：柏.林 第二季 (2026)/81bb0ffa4cf54217a092c14f736875ca-2160p WEB*101DL H265 DDP 5.1 Atmos"
+                                        draggable="true"
+                                      >
+                                        <td class="ant-table-selection-column">
+                                          <span
+                                            ><label class="ant-checkbox-wrapper"
+                                              ><span class="ant-checkbox"
+                                                ><input
+                                                  type="checkbox"
+                                                  class="ant-checkbox-input"
+                                                  value="" /><span
+                                                  class="ant-checkbox-inner"
+                                                ></span></span></label
+                                          ></span>
+                                        </td>
+                                        <td class="td-file td-file-sort">
+                                          <div class="filename">
+                                            <div class="upload-drop-hover">
+                                              上传到同级目录
+                                            </div>
+                                            <div class="file-click-wrap">
+                                              <div class="file-icon">
+                                                <div
+                                                  style="
+                                                    width: 100%;
+                                                    height: 100%;
+                                                    background-size: cover;
+                                                    background-position: 50% 50%;
+                                                    background-repeat: no-repeat;
+                                                    background-image: url('https://drive-pc.quark.cn/1/clouddrive/file/video/thumbnail?fid=f158bfb06ba8441891a10ffad951c1a1&amp;pr=ucpro&amp;fr=pc');
+                                                  "
+                                                ></div>
+                                              </div>
+                                              <div
+                                                class="filename-text editable-cell editable-cell-allow"
+                                                title="Berlin and the Lady with an Ermine S02E08 - 第 8 集 - 2160p WEB-DL H265 DDP 5.1 Atmos.mkv"
+                                                style="padding-right: 24px"
+                                              >
+                                                Berlin and the Lady with an
+                                                Ermine S02E08 - 第 8 集 - 2160p
+                                                WEB-DL H265 DDP 5.1 Atmos.mkv
+                                              </div>
+                                            </div>
+                                            <div class="hover-oper">
+                                              <div
+                                                class="hover-transparent-bg"
+                                              ></div>
+                                              <div class="hover-oper-list">
+                                                <div
+                                                  class="hover-oper-item hoitem-down"
+                                                  title="下载"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-share"
+                                                  title="分享"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-move"
+                                                  title="移动"
+                                                ></div>
+                                                <div
+                                                  class="hover-oper-item hoitem-more ant-dropdown-trigger"
+                                                ></div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </td>
+                                        <td
+                                          class="td-file ant-table-row-cell-break-word"
+                                        >
+                                          9G
+                                        </td>
+                                        <td
+                                          class="td-file td-file-sort ant-table-row-cell-break-word"
+                                        >
+                                          2026-05-22 21:38
+                                        </td>
+                                      </tr>
+                                      <tr class="drag-bottom">
+                                        <td>
+                                          <div class="drag-bottom-wrap">
+                                            <img
+                                              class="drag-bottom-icon"
+                                              src="https://image.quark.cn/s/uae/g/3o/broccoli/resource/202209/8a411b78c0addc7d.16x16.svg"
+                                            /><span class="drag-bottom-btext"
+                                              >拖拽/粘贴</span
+                                            ><span class="drag-bottom-gtext"
+                                              >到灰框内处上传文件</span
+                                            >
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    class="EditableRow--layer-root--9kPw9XQ"
+                    style="left: 0px; top: 0px"
+                  >
+                    <div style="display: none"></div>
+                  </div>
+                </div>
+                <div class="pc-dragging-mask">
+                  <div class="pc-dragging-icon">
+                    <div class="pc-dragging-add"></div>
+                  </div>
+                  <div class="pc-dragging-text">拖拽上传到我的网盘</div>
+                </div>
+              </div>
+              <div></div>
+              <div></div>
+              <div style="z-index: 1003">
+                <ul id="images" style="display: none"></ul>
+              </div>
+              <div
+                class="floating-list-ball-container floating-list-ball-close"
+              >
+                <div class="floating-list-ball">
+                  <span class="floating-list-ball-text">收起</span
+                  ><span class="floating-list-ball-icon"></span>
+                </div>
+                <div class="floating-list-content"></div>
+              </div>
+              <div></div>
+              <div></div>
+            </div>
+          </main>
+        </section>
+      </section>
+      <div></div>
+    </div>
+
+    <script src="//g.alicdn.com/retcode/log/log.js" crossorigin=""></script>
+
+    <script
+      type="text/javascript"
+      src="//g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/vendor.js"
+      crossorigin=""
+    ></script>
+    <script
+      type="text/javascript"
+      src="//g.alicdn.com/uc-cloud-drive-web-system/cloud-drive-web/4.6.3/index.js"
+      crossorigin=""
+    ></script>
+    <script
+      src="//at.alicdn.com/t/c/font_3307044_87dk4583uzp.js"
+      data-namespace="//at.alicdn.com/t/c/font_3307044_87dk4583uzp.js"
+    ></script>
+    <div id="portal-message">
+      <div
+        class="MessageUserLimit--message-wrap--SDEytO2 MessageUserLimit--out-screen--TFf6L-d"
+      >
+        <span>账号涉嫌违规已被封禁，暂时无法使用该功能</span
+        ><span class="MessageUserLimit--btn--3-MWBgO">申诉</span>
+      </div>
+    </div>
+
+    <div class="qn-widget-container hidden">
+      <iframe
+        class="qn-panel-iframe"
+        src="chrome-extension://ghejloobgpnlmhmhmbihamojlbppcpem/popup.html"
+        allow="clipboard-write"
+        style="
+          border-width: medium;
+          border-style: none;
+          border-color: currentcolor;
+          border-image: none;
+        "
+      ></iframe>
+      <div class="qn-floating-btn">
+        <img
+          src="chrome-extension://ghejloobgpnlmhmhmbihamojlbppcpem/assets/icons/icon48.png"
+        />
+      </div>
+      <div class="qn-close-btn" title="关闭">×</div>
+    </div>
+    <iframe
+      id="QKVIP_7acemwprlym"
+      src="https://b.quark.cn/apps/VZXnhXMpc/routes/C35D8HFRi?v=202512261115&amp;frame_id=QKVIP_7acemwprlym&amp;parent_host=pan.quark.cn"
+      style="
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        position: fixed;
+        z-index: -1;
+        border: 0 none;
+      "
+    ></iframe>
+    <div>
+      <div class="ant-message"><span></span></div>
+    </div>
+    <div style="position: absolute; top: 0px; left: 0px; width: 100%">
+      <div>
+        <div
+          class="ant-dropdown ant-dropdown-placement-bottomLeft ant-dropdown-hidden"
+          style="left: 801px; top: 322px"
+        >
+          <ul
+            class="ant-dropdown-menu ant-dropdown-menu-light ant-dropdown-menu-root ant-dropdown-menu-vertical"
+            role="menu"
+            tabindex="0"
+          >
+            <li
+              class="ant-dropdown-menu-item"
+              role="menuitem"
+              aria-disabled="false"
+            >
+              打开
+            </li>
+            <li class="ant-dropdown-menu-item line" role="menuitem">下载</li>
+            <li class="ant-dropdown-menu-item" role="menuitem">分享</li>
+            <li class="ant-dropdown-menu-item line" role="menuitem">移动到…</li>
+            <li
+              class="ant-dropdown-menu-item"
+              role="menuitem"
+              aria-disabled="false"
+            >
+              重命名
+            </li>
+            <li class="ant-dropdown-menu-item" role="menuitem">删除</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </body>
+  <div id="immersive-translate-browser-popup" style="all: initial"></div>
+</html>
