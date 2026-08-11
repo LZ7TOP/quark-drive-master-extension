@@ -28,6 +28,15 @@ try {
     process.exit(1);
   }
 
+  const requiredFiles = ['LICENSE', 'README.md', 'manifest.json', 'package.json', 'data/about.json', 'data/changelog.json'];
+  requiredFiles.forEach((file) => {
+    if (!fs.existsSync(file)) {
+      console.error(`❌ [错误]: 缺失必要的核心规范文件: ${file}`);
+      process.exit(1);
+    }
+  });
+
+  console.log(`✔ [成功]: 根目录必备规范文件完整性校验通过！`);
   console.log(`✔ [成功]: 全项目所有 5 处版本号及说明文件 100% 完全同步一键校验通过！(v${vManifest})`);
 } catch (e) {
   console.error(`❌ [错误]: 版本强校验失败:`, e.message);
