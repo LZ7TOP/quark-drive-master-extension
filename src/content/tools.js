@@ -26,13 +26,6 @@ const TYPE_LABELS = {
 
 const ILLEGAL_CHARS = /[\\/:*?"<>|]/;
 
-const TEMPLATES = [
-  { name: '剧集编号', template: '剧集.EP{n}', pad: 2, desc: '剧集.EP01 / 剧集.EP02 …' },
-  { name: '第N集', template: '第{n}集', pad: 2, desc: '第01集 / 第02集 …' },
-  { name: '文件序号', template: '文件_{n}', pad: 2, desc: '文件_01 / 文件_02 …' },
-  { name: '三位序号', template: '{n}', pad: 3, desc: '001 / 002 / 003 …' }
-];
-
 function classifyType(fileName) {
   for (const [type, pattern] of Object.entries(TYPE_PATTERNS)) {
     if (pattern.test(fileName)) return type;
@@ -90,32 +83,6 @@ function renderStatistics() {
       `;
     })
     .join('');
-}
-
-function applyTemplate(template, pad) {
-  const targets = state.fileList.filter((f) => f.visible && f.selected);
-  if (targets.length === 0) {
-    customAlert('提示', '请先在文件列表中勾选要套用模板的文件。');
-    return;
-  }
-
-  let n = 1;
-  targets.forEach((file) => {
-    const num = String(n).padStart(pad, '0');
-    const base = template.replace('{n}', num);
-    if (file.is_dir) {
-      file.new_name = base;
-    } else {
-      const dot = file.file_name.lastIndexOf('.');
-      const ext = dot > 0 ? file.file_name.substring(dot) : '';
-      file.new_name = base + ext;
-    }
-    n++;
-  });
-
-  renderTable();
-  updateStatText();
-  log(`已套用模板「${template}」到 ${targets.length} 个文件`);
 }
 
 function detectDuplicates() {
@@ -270,21 +237,6 @@ export function renderToolsViewComponent() {
       </div>
 
       <div class="qr-tool-card">
-        <div class="qr-tool-card-header">${ICONS.zap} 重命名模板库</div>
-        <p class="qr-tool-desc">先在文件列表勾选目标文件，再点击下方模板一键套用编号方案。</p>
-        <div id="qrTemplateList" class="qr-template-list">
-          ${TEMPLATES.map(
-            (t) => `
-            <button class="qr-template-btn" data-template="${escapeHtml(t.template)}" data-pad="${t.pad}">
-              <span class="qr-template-name">${escapeHtml(t.name)}</span>
-              <span class="qr-template-desc">${escapeHtml(t.desc)}</span>
-            </button>
-          `
-          ).join('')}
-        </div>
-      </div>
-
-      <div class="qr-tool-card">
         <div class="qr-tool-card-header">${ICONS.target} 重复文件名检测</div>
         <p class="qr-tool-desc">按文件名（忽略大小写）检测当前目录下的重复文件，支持一键删除多余项。</p>
         <button id="qrDetectDupBtn" class="qr-btn-tool qr-btn-blue">开始检测重复</button>
@@ -312,14 +264,6 @@ export function bindToolsEvents() {
   if (detectBtn) detectBtn.addEventListener('click', detectDuplicates);
   if (inspectBtn) inspectBtn.addEventListener('click', inspectNames);
   if (fixBtn) fixBtn.addEventListener('click', fixNames);
-
-  document.querySelectorAll('.qr-template-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const template = btn.dataset.template;
-      const pad = parseInt(btn.dataset.pad) || 2;
-      applyTemplate(template, pad);
-    });
-  });
 }
 
 export function refreshToolsView() {

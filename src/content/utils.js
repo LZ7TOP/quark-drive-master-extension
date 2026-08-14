@@ -74,3 +74,17 @@ export function parseCsvLine(line) {
   result.push(current);
   return result.map((s) => s.trim());
 }
+
+export function friendlyErrorMessage(res) {
+  if (!res) return '操作失败';
+  const code = res.code;
+  const message = res.message || res.error || '';
+  const text = String(message).toLowerCase();
+
+  if (code === 23008 || text.includes('同名') || text.includes('冲突') || text.includes('doloading')) {
+    return '名称冲突：该文件夹/文件名称已存在，请更换名称后重试';
+  }
+  if (code === -1) return '网络或代理请求异常，请稍后重试';
+
+  return message || '操作失败';
+}

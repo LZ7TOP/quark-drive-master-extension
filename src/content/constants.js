@@ -22,6 +22,13 @@ export const ICONS = {
   arrowRight: `<svg class="qr-icon" style="fill: #60a5fa;" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>`
 };
 
+export const RENAME_TEMPLATES = [
+  { name: '剧集编号', template: '剧集.EP{n}', pad: 2 },
+  { name: '第N集', template: '第{n}集', pad: 2 },
+  { name: '文件序号', template: '文件_{n}', pad: 2 },
+  { name: '三位序号', template: '{n}', pad: 3 }
+];
+
 export const DEFAULT_CHANGELOG_DATA = [
   {
     version: 'v1.5.3',

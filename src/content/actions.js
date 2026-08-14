@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { ICONS } from './constants.js';
-import { log } from './utils.js';
+import { log, friendlyErrorMessage } from './utils.js';
 import { customAlert, customConfirm, customPrompt } from './dialogs.js';
 import { requestRename, requestCreateDirectory, requestDeleteFiles, fetchFileList } from './api.js';
 import { saveHistorySnapshot } from './history.js';
@@ -131,8 +131,9 @@ export function promptCreateDirectory() {
         customAlert('创建成功', `已在当前目录下成功新建文件夹 "${folderName}"。`);
         fetchFileList();
       } else {
-        log(`新建文件夹失败: ${res?.message || res?.error || '受阻'}`);
-        customAlert('创建失败', res?.message || res?.error || '新建文件夹失败');
+        const errMsg = friendlyErrorMessage(res);
+        log(`新建文件夹失败: ${errMsg}`);
+        customAlert('创建失败', errMsg);
       }
     } catch (err) {
       log(`创建文件夹捕获异常: ${err.message}`);

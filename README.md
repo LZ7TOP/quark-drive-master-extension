@@ -3,7 +3,7 @@
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
   <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销 · 实用工具箱</b></p>
 
-[![Extension Release](https://img.shields.io/badge/Extension-v3.2.0-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
+[![Extension Release](https://img.shields.io/badge/Extension-v3.2.1-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author: LZ7工作室](https://img.shields.io/badge/Author-LZ7工作室-2563EB.svg)](https://github.com/LZ7TOP)
@@ -27,7 +27,7 @@
 - **行内单件【✓ 保存】快捷键**：为每一个手写修改的文件行生成专属 `[✓ 保存]` 按键，无需批量操作，点击即可秒级完成单件发包与历史存档。
 - **文本查找与替换**：支持普通字符串替换与正则表达式（Regex）高级匹配，支持忽略大小写。
 - **添加前缀 / 后缀**：一键为所有选中的文件统一插入前缀或后缀。
-- **智能自增序号**：自定义序号起始值（如 `1`）与填充位数（如 `01`, `001`），支持在文件名任意位置插入。
+- **智能自增序号**：自定义序号起始值（如 `1`）与填充位数（如 `01`, `001`），支持在文件名任意位置插入，内置剧集编号、第 N 集等快捷模板一键套用。
 - **大小写与繁简转换**：支持转大写/小写/首字母大写，以及一键将繁体中文转换为简体中文。
 - **扩展名变更**：支持批量修改文件扩展名或去除特定后缀。
 - **一键净化清洗**：一键清理广告网址域名、中括号/宣发后缀，并自动繁转简。
@@ -66,14 +66,13 @@
 - **目录统计**：实时展示当前目录总项目数、文件数、文件夹数与总大小，并按类型可视化分布。
 - **重复文件名检测**：一键检测同名文件，支持勾选并批量删除多余重复项。
 - **文件名规范检查**：检测空文件名、Windows 非法字符、名称超长、首尾空格等问题，支持一键自动修复。
-- **重命名模板库**：内置剧集编号、第 N 集、文件序号、三位序号等常用模板，勾选后一键套用。
 
 ---
 
 ## 🛠️ 安装与使用方法
 
 1. **下载或拉取源码包**：
-   下载解压发布包 `release/quark-batch-rename-v3.2.0.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
+   下载解压发布包 `release/quark-batch-rename-v3.2.1.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
 2. **打开 Chrome 扩展程序页面**：
    在浏览器地址栏输入 `chrome://extensions/`，并开启右上角的 **「开发者模式」**。
 3. **加载已解压的扩展程序**：
@@ -132,6 +131,13 @@ npm run format
 ## 📝 更新日志
 
 完整的历史版本更新明细请见 [FULL_RELEASE_NOTES.md](FULL_RELEASE_NOTES.md) 与 [public/data/changelog.json](public/data/changelog.json)，也可在插件面板的「更新日志」页签内实时查看。
+
+### v3.2.1 (2026-08-14)
+
+- 修复目录统计不随数据变化刷新的问题，改为实时联动。
+- 重命名模板库迁移至主面板「智能序号」Tab，点击即时填充并预览，勾选文件即可直观看到效果。
+- 重复检测 / 规范检查结果在目录数据重新加载后自动清空，避免过期提示残留。
+- 新建文件夹失败时友好提示（如「名称冲突：该名称已存在」），并优化 API 错误处理避免错误信息丢失。
 
 ### v3.2.0 (2026-08-14)
 

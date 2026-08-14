@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { ICONS, DEFAULT_CHANGELOG_DATA } from './constants.js';
+import { ICONS, DEFAULT_CHANGELOG_DATA, RENAME_TEMPLATES } from './constants.js';
 import { escapeHtml, fetchJsonData, log } from './utils.js';
 import { fetchFileList } from './api.js';
 import { recalculateNewNames, updateConfigFromUI } from './rename.js';
@@ -314,6 +314,12 @@ export function renderMainViewComponent() {
             <input type="number" id="qrNumPad" class="qr-input" value="2" min="1" max="6" style="width: 75px;">
           </div>
         </div>
+        <div class="qr-input-row" style="margin-top: 8px;">
+          <label style="font-size: 12px; color: #a1a1aa; flex-shrink: 0;">快捷模板:</label>
+          <div class="qr-template-chips">
+            ${RENAME_TEMPLATES.map((t) => `<button class="qr-template-chip" data-template="${escapeHtml(t.template)}" data-pad="${t.pad}" title="${escapeHtml(t.template)}">${escapeHtml(t.name)}</button>`).join('')}
+          </div>
+        </div>
       </div>
 
       <div id="panelExtension" class="qr-panel-content" style="display: none;">
@@ -607,6 +613,9 @@ export function renderTable() {
   const tbody = document.getElementById('qrTableBody');
   const visibleFiles = state.fileList.filter((f) => f.visible);
 
+  // 同步刷新工具箱的目录统计，确保数据随文件列表变化实时更新
+  refreshToolsView();
+
   if (visibleFiles.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #71717a; padding: 30px;">没有找到符合条件的文件或文件夹</td></tr>`;
     updateStatText();
@@ -851,6 +860,29 @@ export function bindEvents() {
       document.getElementById('panelClean').style.display = state.activeTab === 'clean' ? 'block' : 'none';
 
       recalculateNewNames();
+    });
+  });
+
+  // 智能序号快捷模板：点击后填充模板并实时预览，勾选文件即可看到效果
+  document.querySelectorAll('.qr-template-chip').forEach((chip) => {
+    chip.addEventListener('click', (e) => {
+      const template = e.currentTarget.dataset.template;
+      const pad = parseInt(e.currentTarget.dataset.pad) || 2;
+
+      const numTemplateInput = document.getElementById('qrNumTemplate');
+      const numPadInput = document.getElementById('qrNumPad');
+      if (numTemplateInput) numTemplateInput.value = template;
+      if (numPadInput) numPadInput.value = pad;
+
+      state.activeTab = 'numbering';
+      document.querySelectorAll('.qr-tab-btn[data-tab]').forEach((b) => b.classList.toggle('active', b.dataset.tab === 'numbering'));
+      document.getElementById('panelReplace').style.display = 'none';
+      document.getElementById('panelPrefix').style.display = 'none';
+      document.getElementById('panelNumbering').style.display = 'block';
+      document.getElementById('panelExtension').style.display = 'none';
+      document.getElementById('panelClean').style.display = 'none';
+
+      updateConfigFromUI();
     });
   });
 

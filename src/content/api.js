@@ -22,9 +22,8 @@ export async function requestRename(fid, newFileName) {
     const text = await resp.text();
     try {
       const data = JSON.parse(text);
-      if (data && (data.code === 0 || data.status === 200)) {
-        return data;
-      }
+      // 前台拿到任何合法 JSON（无论成功或失败）都直接返回，交由调用方判断状态码
+      return data;
     } catch (parseErr) {
       if (text.includes('Invalid CORS')) {
         console.warn('前台 fetch 触发 CORS 校验拦截，自动降级为 Service Worker 代理发包');
@@ -67,9 +66,8 @@ export async function requestCreateDirectory(pdirFid, folderName) {
     const text = await resp.text();
     try {
       const data = JSON.parse(text);
-      if (data && (data.code === 0 || data.status === 200)) {
-        return data;
-      }
+      // 前台拿到任何合法 JSON（无论成功或失败）都直接返回，交由调用方判断状态码
+      return data;
     } catch (parseErr) {
       console.warn('前台新建文件夹 fetch 解析非 JSON，自动降级为 Service Worker 代理');
     }
@@ -110,9 +108,8 @@ export async function requestDeleteFiles(fids) {
     const text = await resp.text();
     try {
       const data = JSON.parse(text);
-      if (data && (data.code === 0 || data.status === 200)) {
-        return data;
-      }
+      // 前台拿到任何合法 JSON（无论成功或失败）都直接返回，交由调用方判断状态码
+      return data;
     } catch (parseErr) {
       console.warn('前台删除 fetch 解析非 JSON，自动降级为 Service Worker 代理');
     }
@@ -237,6 +234,12 @@ export async function fetchFileList() {
   const tableBody = document.getElementById('qrTableBody');
   tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #71717a; padding: 30px;">正在获取文件数据 (FID: ${state.pdir_fid})...</td></tr>`;
   state.fileList = [];
+
+  // 目录数据即将更新，清空工具箱中基于旧数据的检测/检查结果，避免过期提示残留
+  const dupResult = document.getElementById('qrDupResult');
+  if (dupResult) dupResult.innerHTML = '';
+  const inspectResult = document.getElementById('qrInspectResult');
+  if (inspectResult) inspectResult.innerHTML = '';
 
   // 竞态防护：仅保留最后一次请求的结果，避免快速切换目录时旧数据覆盖新数据
   const seq = ++state.fetchSeq;

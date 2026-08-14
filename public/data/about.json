@@ -1,7 +1,7 @@
 {
   "project": {
     "name": "夸克网盘全能管理工具",
-    "version": "3.2.0",
+    "version": "3.2.1",
     "author": "LZ7 工作室 (LZ7 Studio)",
     "url": "https://github.com/LZ7TOP/quark-drive-master-extension",
     "releaseUrl": "https://github.com/LZ7TOP/quark-drive-master-extension/releases",
@@ -12,7 +12,7 @@
     {
       "icon": "zap",
       "title": "批量重命名与正则替换",
-      "desc": "支持查找替换、正则匹配、前缀后缀、智能序号、扩展名修改、大小写与繁简转换、一键净化清洗。"
+      "desc": "支持查找替换、正则匹配、前缀后缀、智能序号（含快捷命名模板）、扩展名修改、大小写与繁简转换、一键净化清洗。"
     },
     {
       "icon": "check",
@@ -52,7 +52,7 @@
     {
       "icon": "toolbox",
       "title": "实用工具箱",
-      "desc": "内置目录统计、重复文件名检测、文件名规范检查与重命名模板库，覆盖日常整理高频场景。"
+      "desc": "内置目录统计、重复文件名检测与文件名规范检查，覆盖日常整理高频场景。"
     }
   ]
 }
