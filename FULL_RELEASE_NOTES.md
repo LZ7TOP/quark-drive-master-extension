@@ -1,5 +1,20 @@
 # 🚀 夸克网盘全能管理工具 (Quark Drive Master) 全量版本更新日志
 
+## 📦 v3.0.3 (2026-08-11) - 稳健性与体验全面修复版
+
+- **修复 CSV 导出重复触发 Bug**：移除导出/导入按钮的重复事件绑定，彻底解决点击一次却下载两份同名 CSV 文件的问题。
+- **修复批量删除按钮重复绑定隐患**：清理批量重命名执行中的删除按钮二次绑定死代码，杜绝重复弹窗与误删风险。
+- **CSV 导入支持引号转义字段**：新增带引号 CSV 解析器，正确识别含逗号、引号与换行的文件名，并兼容 UTF-8 BOM 表头。
+- **繁体转简体映射大幅扩充**：将繁体简体对照表由约 35 字扩充至 300+ 常用字，覆盖影视、文件与日常高频字，转换效果显著提升。
+- **新增请求竞态防护**：加载目录增加序列号守卫，快速切换目录或连点刷新时不再出现旧数据覆盖新数据的错乱。
+- **单件保存与撤销任务并发防护**：为单件【✓ 保存】与历史撤销加入任务锁，避免与批量任务交错冲突；撤销间隔改为读取全局请求间隔配置。
+- **DOM 降级模式风险提示**：当接口异常自动降级抓取网页时，明确提示若未获取真实 FID 则重命名/删除可能失败。
+- **修复全域版本号漂移**：统一 background.js、content.js、popup.js、package-lock.json 等文件头与版本号至 v3.0.3，并强化版本强一致性校验脚本。
+- **细化夸克页面识别**：Popup 由宽松的 quark.cn 包含判断改为精确匹配 pan.quark.cn 与 drive-pc.quark.cn。
+- **Manifest 声明最低 Chrome 版本**：新增 minimum_chrome_version 声明，避免低版本内核运行报错。
+
+---
+
 ## 📦 v3.0.1 (2026-08-11) - CI/CD 流水线与官方发布规范版
 
 - **🔗 官方 Git 源码仓库与 Release 发包下载地址**：<br/>• 官方 Git 仓库：<a href="https://github.com/LZ7TOP/quark-drive-master-extension" target="_blank" style="color:#60a5fa; text-decoration: underline;">https://github.com/LZ7TOP/quark-drive-master-extension</a><br/>• Releases 离线发包下载：<a href="https://github.com/LZ7TOP/quark-drive-master-extension/releases" target="_blank" style="color:#60a5fa; text-decoration: underline;">https://github.com/LZ7TOP/quark-drive-master-extension/releases</a>

@@ -3,7 +3,7 @@
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
   <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销</b></p>
 
-[![Extension Release](https://img.shields.io/badge/Extension-v3.0.2-2563EB?logo=googlechrome&logoColor=white)](manifest.json)
+[![Extension Release](https://img.shields.io/badge/Extension-v3.0.3-2563EB?logo=googlechrome&logoColor=white)](manifest.json)
 [![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author: LZ7工作室](https://img.shields.io/badge/Author-LZ7工作室-2563EB.svg)](https://github.com/LZ7TOP)
@@ -52,7 +52,7 @@
 ## 🛠️ 安装与使用方法
 
 1. **下载或拉取源码包**：
-   下载解压发布包 `release/quark-batch-rename-v3.0.0.zip`。
+   下载解压发布包 `release/quark-batch-rename-v3.0.3.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
 2. **打开 Chrome 扩展程序页面**：
    在浏览器地址栏输入 `chrome://extensions/`，并开启右上角的 **「开发者模式」**。
 3. **加载已解压的扩展程序**：
@@ -68,6 +68,36 @@
 - **前台同源优先发包**：包含完整的同源发包与 Service Worker 后台发包代理，完美规避 CORS 与防盗链拦截。
 - **纯手写 CustomSelect 下拉组件**：彻底剔除原生 `<select>` 弹窗，全量手写 Dark 扁平悬浮列表。
 - **纯矢量 SVG 图标**：全量淘汰 Emoji 符号，统一标准 UI 视觉规范。
+
+---
+
+## 🧪 本地开发与打包
+
+```bash
+# 校验全项目版本号一致性与核心文件完整性
+npm run check
+
+# 打包生成 release/quark-batch-rename-vX.Y.Z.zip 离线包
+npm run pack
+
+# 一键校验并打包
+npm run build
+```
+
+---
+
+## 📝 更新日志
+
+完整的历史版本更新明细请见 [FULL_RELEASE_NOTES.md](FULL_RELEASE_NOTES.md) 与 [data/changelog.json](data/changelog.json)，也可在插件面板的「更新日志」页签内实时查看。
+
+### v3.0.3 (2026-08-11)
+
+- 修复 CSV 导出按钮重复触发导致下载两份同名文件的问题。
+- 修复批量删除按钮二次绑定隐患，杜绝重复弹窗。
+- CSV 导入支持引号转义字段与 UTF-8 BOM，正确解析含逗号/引号文件名。
+- 繁体转简体映射由 35 字扩充至 300+ 常用字。
+- 新增目录加载竞态防护与单件/撤销任务锁，避免并发冲突。
+- 统一全项目版本号至 v3.0.3 并强化版本校验脚本。
 
 ---
 

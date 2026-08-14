@@ -1,5 +1,5 @@
 /**
- * 夸克网盘全能管理工具 - Content Script (v3.0.0 整合全能版)
+ * 夸克网盘全能管理工具 - Content Script (v3.0.3)
  * 包含批量重命名、行内快捷保存、文件删除、新建文件夹、CSV 协同与历史撤销
  */
 
@@ -25,11 +25,56 @@
   };
 
   const TRAD_SIMP_MAP = {
+    // 影视/动漫高频字
     '戀': '恋', '愛': '爱', '視': '视', '頻': '频', '劇': '剧', '集': '集', '動': '动', '畫': '画',
     '漫': '漫', '國': '国', '語': '语', '華': '华', '電': '电', '影': '影', '驚': '惊', '悚': '悚',
     '懸': '悬', '疑': '疑', '喜': '喜', '科': '科', '幻': '幻', '錄': '录', '像': '像', '廣': '广',
     '東': '东', '話': '话', '關': '关', '開': '开', '發': '发', '轉': '转', '換': '换', '線': '线',
-    '組': '组', '無': '无', '網': '网', '盤': '盘', '劃': '划', '報': '报'
+    '組': '组', '無': '无', '網': '网', '盤': '盘', '劃': '划', '報': '报', '樂': '乐', '學': '学',
+    '圖': '图', '說': '说', '讀': '读', '書': '书', '寫': '写', '聽': '听', '觀': '观', '看': '看',
+    '點': '点', '擊': '击', '戰': '战', '爭': '争', '奪': '夺', '勝': '胜', '負': '负', '鬥': '斗',
+    '記': '记', '憶': '忆', '傳': '传', '統': '统', '單': '单', '雙': '双', '數': '数', '碼': '码',
+    '質': '质', '量': '量', '級': '级', '別': '别', '類': '类', '型': '型', '種': '种', '個': '个',
+    // 常用简体化
+    '這': '这', '那': '那', '們': '们', '來': '来', '去': '去', '時': '时', '間': '间', '會': '会',
+    '對': '对', '錯': '错', '為': '为', '所': '所', '以': '以', '可': '可', '能': '能', '體': '体',
+    '實': '实', '現': '现', '現': '现', '內': '内', '外': '外', '上': '上', '下': '下', '中': '中',
+    '大': '大', '小': '小', '多': '多', '少': '少', '新': '新', '舊': '旧', '老': '老', '年': '年',
+    '月': '月', '日': '日', '號': '号', '第': '第', '季': '季', '期': '期', '篇': '篇', '章': '章',
+    '節': '节', '段': '段', '場': '场', '次': '次', '回': '回', '話': '话', '卷': '卷', '冊': '册',
+    // 高频媒体/文件字
+    '壓': '压', '縮': '缩', '解': '解', '包': '包', '檔': '档', '案': '案', '資': '资', '料': '料',
+    '源': '源', '碼': '码', '鏈': '链', '接': '接', '載': '载', '下': '下', '載': '载', '上': '上',
+    '傳': '传', '存': '存', '儲': '储', '備': '备', '份': '份', '格': '格', '式': '式', '轉': '转',
+    '換': '换', '導': '导', '入': '入', '出': '出', '刪': '删', '除': '除', '移': '移', '動': '动',
+    '複': '复', '製': '制', '貼': '贴', '粘': '粘', '剪': '剪', '輯': '辑', '編': '编', '碼': '码',
+    '譯': '译', '翻': '翻', '字': '字', '幕': '幕', '音': '音', '軌': '轨', '聲': '声', '畫': '画',
+    '質': '质', '清': '清', '晰': '晰', '標': '标', '準': '准', '超': '超', '高': '高', '速': '速',
+    '極': '极', '限': '限', '完': '完', '整': '整', '版': '版', '全': '全', '集': '集', '季': '季',
+    '臺': '台', '灣': '湾', '香': '香', '港': '港', '陸': '陆', '華': '华', '粵': '粤', '普': '普',
+    '通': '通', '語': '语', '韓': '韩', '日': '日', '美': '美', '英': '英', '法': '法', '德': '德',
+    '意': '意', '俄': '俄', '西': '西', '泰': '泰', '印': '印', '越': '越', '菲': '菲', '馬': '马',
+    // 常见汉字
+    '長': '长', '短': '短', '黑': '黑', '白': '白', '紅': '红', '藍': '蓝', '綠': '绿', '黃': '黄',
+    '金': '金', '銀': '银', '銅': '铜', '鐵': '铁', '鋼': '钢', '樹': '树', '葉': '叶', '花': '花',
+    '草': '草', '水': '水', '火': '火', '風': '风', '雨': '雨', '雷': '雷', '電': '电', '雲': '云',
+    '龍': '龙', '鳳': '凤', '鳥': '鸟', '魚': '鱼', '馬': '马', '牛': '牛', '羊': '羊', '豬': '猪',
+    '貓': '猫', '狗': '狗', '雞': '鸡', '鴨': '鸭', '鵝': '鹅', '蟲': '虫', '獸': '兽', '魔': '魔',
+    '鬼': '鬼', '神': '神', '仙': '仙', '佛': '佛', '帝': '帝', '王': '王', '皇': '皇', '軍': '军',
+    '師': '师', '將': '将', '士': '士', '兵': '兵', '隊': '队', '敵': '敌', '友': '友', '人': '人',
+    '男': '男', '女': '女', '孩': '孩', '子': '子', '兒': '儿', '女': '女', '父': '父', '母': '母',
+    '兄': '兄', '弟': '弟', '姐': '姐', '妹': '妹', '家': '家', '庭': '庭', '朋': '朋', '友': '友',
+    '生': '生', '死': '死', '活': '活', '命': '命', '運': '运', '氣': '气', '愛': '爱', '情': '情',
+    '婚': '婚', '姻': '姻', '業': '业', '務': '务', '工': '工', '作': '作', '學': '学', '校': '校',
+    '教': '教', '育': '育', '醫': '医', '藥': '药', '護': '护', '員': '员', '會': '会', '員': '员',
+    '領': '领', '導': '导', '總': '总', '經': '经', '理': '理', '銀': '银', '行': '行', '錢': '钱',
+    '財': '财', '富': '富', '貴': '贵', '寶': '宝', '貝': '贝', '車': '车', '船': '船', '機': '机',
+    '飛': '飞', '火': '火', '輪': '轮', '路': '路', '橋': '桥', '城': '城', '市': '市', '鎮': '镇',
+    '鄉': '乡', '村': '村', '山': '山', '河': '河', '湖': '湖', '海': '海', '島': '岛', '岸': '岸',
+    '門': '门', '窗': '窗', '牆': '墙', '屋': '屋', '房': '房', '樓': '楼', '層': '层', '頂': '顶',
+    '底': '底', '桌': '桌', '椅': '椅', '床': '床', '燈': '灯', '鏡': '镜', '鐘': '钟', '錶': '表',
+    '錢': '钱', '幣': '币', '票': '票', '證': '证', '紙': '纸', '筆': '笔', '墨': '墨', '硯': '砚',
+    '冊': '册', '頁': '页', '張': '张', '幅': '幅', '畫': '画', '相': '相', '照': '照', '圖': '图'
   };
 
   const state = {
@@ -44,6 +89,7 @@
     sortBy: 'natural_asc',
     delayMs: 500,
     isRunning: false,
+    fetchSeq: 0,
     config: {
       replaceSearch: '',
       replaceTarget: '',
@@ -508,15 +554,6 @@
         </div>
       </div>
     `;
-
-    setTimeout(() => {
-      const exportBtn = document.getElementById('qrExportCsvBtnPage');
-      const importBtn = document.getElementById('qrImportCsvBtnPage');
-      const fileInput = document.getElementById('qrCsvFileInput');
-
-      if (exportBtn) exportBtn.onclick = exportCsvMapping;
-      if (importBtn && fileInput) importBtn.onclick = () => fileInput.click();
-    }, 50);
   }
 
   const DEFAULT_CHANGELOG_DATA = [
@@ -730,7 +767,6 @@
     const csvFileInput = document.getElementById('qrCsvFileInput');
     const fidInput = document.getElementById('qrFidInput');
     const includeSubDirsCb = document.getElementById('qrIncludeSubDirs');
-    const sortBySelect = document.getElementById('qrSortBySelect');
     const selectAllCb = document.getElementById('qrSelectAll');
     const startBtn = document.getElementById('qrStartBtn');
 
@@ -766,12 +802,6 @@
 
     includeSubDirsCb.addEventListener('change', (e) => {
       state.includeSubDirs = e.target.checked;
-    });
-
-    sortBySelect.addEventListener('change', (e) => {
-      state.sortBy = e.target.value;
-      sortFileList();
-      recalculateNewNames();
     });
 
     refreshBtn.addEventListener('click', () => {
@@ -875,22 +905,58 @@
     log(`导出 CSV 文件重命名清单成功`);
   }
 
+  function parseCsvLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          current += ch;
+        }
+      } else if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        result.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+    result.push(current);
+    return result.map((s) => s.trim());
+  }
+
   function importCsvMapping(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target.result;
+        // 去掉 UTF-8 BOM，避免表头首行误判
+        const text = String(e.target.result).replace(/^\uFEFF/, '');
         const lines = text.split(/\r?\n/);
         let matchCount = 0;
 
         lines.forEach((line) => {
-          if (!line.trim() || line.startsWith('原文件名')) return;
-          const parts = line.split(',');
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('原文件名')) return;
+          const parts = parseCsvLine(line);
           if (parts.length >= 2) {
-            const oldName = parts[0].replace(/^"|"$/g, '').trim();
-            const newName = parts[1].replace(/^"|"$/g, '').trim();
+            const oldName = parts[0];
+            const newName = parts[1];
+            const fid = (parts[2] || '').trim();
 
-            const targetFile = state.fileList.find((f) => f.file_name === oldName || (parts[2] && f.fid === parts[2].trim()));
+            const targetFile = state.fileList.find(
+              (f) => f.file_name === oldName || (fid && f.fid === fid)
+            );
             if (targetFile && newName) {
               targetFile.new_name = newName;
               targetFile.selected = true;
@@ -998,8 +1064,12 @@
     tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #71717a; padding: 30px;">正在获取文件数据 (FID: ${state.pdir_fid})...</td></tr>`;
     state.fileList = [];
 
+    // 竞态防护：仅保留最后一次请求的结果，避免快速切换目录时旧数据覆盖新数据
+    const seq = ++state.fetchSeq;
+
     try {
       await loadDirectoryFiles(state.pdir_fid, '');
+      if (seq !== state.fetchSeq) return;
       sortFileList();
       recalculateNewNames();
       if (state.fileList.length === 0) {
@@ -1008,12 +1078,14 @@
         log(`加载成功: 当前层级文件 ${state.fileList.length} 项`);
       }
     } catch (err) {
+      if (seq !== state.fetchSeq) return;
       console.warn('接口加载异常，自动启动 DOM 降级抓取:', err);
       captureFilesFromDom();
       sortFileList();
       recalculateNewNames();
       if (state.fileList.length > 0) {
         log(`DOM 自动捕获成功: 抓取网页文件 ${state.fileList.length} 项`);
+        log('⚠️ 降级模式: 若未抓到真实 FID，重命名/删除可能失败，建议刷新页面后重试');
       } else {
         tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444; padding: 30px;">加载失败: ${err.message || '网络问题'}</td></tr>`;
       }
@@ -1381,7 +1453,12 @@
 
   async function runSingleRename(file) {
     if (!file || file.new_name === file.file_name) return;
+    if (state.isRunning) {
+      customAlert('提示', '已有任务正在执行中，请等待当前任务完成后再操作。');
+      return;
+    }
 
+    state.isRunning = true;
     log(`正在修改单件: [${file.file_name}] ➔ [${file.new_name}] ...`);
     try {
       const res = await requestRename(file.fid, file.new_name);
@@ -1394,12 +1471,14 @@
         updateStatText();
         customAlert('修改成功', `已成功将 "${oldName}" 重命名为 "${file.new_name}"！`);
       } else {
-        log(`修改失败: ${res?.message || '请求受阻'}`);
-        customAlert('修改失败', res?.message || '单件重命名失败');
+        log(`修改失败: ${res?.message || res?.error || '请求受阻'}`);
+        customAlert('修改失败', res?.message || res?.error || '单件重命名失败');
       }
     } catch (err) {
       log(`修改捕获异常: ${err.message}`);
       customAlert('异常', err.message);
+    } finally {
+      state.isRunning = false;
     }
   }
 
@@ -1418,8 +1497,6 @@
 
       state.isRunning = true;
       const startBtn = document.getElementById('qrStartBtn');
-      const deleteBtn = document.getElementById('qrDeleteBtn');
-      if (deleteBtn) deleteBtn.onclick = runBatchDelete;
       const delayInput = document.getElementById('qrDelayInput');
       const logBox = document.getElementById('qrLogBox');
       const progressWrap = document.getElementById('qrProgressBarWrap');
@@ -1427,7 +1504,7 @@
 
       state.delayMs = parseInt(delayInput.value) || 500;
       startBtn.disabled = true;
-      startBtn.textContent = '重命名执行中...';
+      startBtn.innerHTML = `${ICONS.zap} 重命名执行中...`;
       logBox.style.display = 'block';
       progressWrap.style.display = 'block';
       logBox.innerHTML = '';
@@ -1456,7 +1533,7 @@
             log(`  改名成功`);
           } else {
             failCount++;
-            log(`  失败: ${result.message || JSON.stringify(result)}`);
+            log(`  失败: ${result.message || result.error || '未知错误'}`);
           }
         } catch (err) {
           failCount++;
@@ -1470,7 +1547,7 @@
 
       log(`执行完成！成功: ${successCount} 个，失败: ${failCount} 个`);
       startBtn.disabled = false;
-      startBtn.textContent = '开始批量重命名';
+      startBtn.innerHTML = `${ICONS.zap} 开始批量重命名`;
       state.isRunning = false;
 
       if (historyItems.length > 0) {
@@ -1607,7 +1684,15 @@
   async function runUndoHistory(record) {
     customConfirm('确认撤销还原', `确认要将 ${record.time} 修改的 ${record.items.length} 个文件还原为原来的文件名吗？`, async (confirmed) => {
       if (!confirmed) return;
+      if (state.isRunning) {
+        customAlert('提示', '已有任务正在执行中，请等待当前任务完成后再操作。');
+        return;
+      }
 
+      const delayInput = document.getElementById('qrDelayInput');
+      const delayMs = parseInt(delayInput && delayInput.value) || 400;
+
+      state.isRunning = true;
       log(`开始一键撤销还原 ${record.items.length} 项文件...`);
       let success = 0;
       let fail = 0;
@@ -1622,15 +1707,18 @@
             log(`  还原成功`);
           } else {
             fail++;
-            log(`  还原失败: ${res.message || '未知错误'}`);
+            log(`  还原失败: ${res.message || res.error || '未知错误'}`);
           }
         } catch (err) {
           fail++;
           log(`  异常: ${err.message}`);
         }
-        await new Promise((r) => setTimeout(r, 400));
+        if (i < record.items.length - 1) {
+          await new Promise((r) => setTimeout(r, delayMs));
+        }
       }
 
+      state.isRunning = false;
       customAlert('撤销完成', `成功还原 ${success} 个文件，失败 ${fail} 个。`);
       fetchFileList();
     });

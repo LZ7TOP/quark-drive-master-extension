@@ -1,4 +1,4 @@
-// 夸克网盘批量重命名与文件管理助手 - Background Service Worker (v1.7.0)
+// 夸克网盘全能管理工具 - Background Service Worker (v3.0.3)
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log('[Quark Assistant] 插件后台服务启动');

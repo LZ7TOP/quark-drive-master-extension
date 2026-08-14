@@ -1,4 +1,4 @@
-// 夸克网盘全能管理工具 - Popup Script (v3.0.0 整合全能版)
+// 夸克网盘全能管理工具 - Popup Script (v3.0.3)
 
 document.addEventListener('DOMContentLoaded', async () => {
   const pageStatusEl = document.getElementById('pageStatus');
@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    const isQuark = tab.url && (tab.url.includes('quark.cn'));
+    const isQuark = tab.url && (tab.url.startsWith('https://pan.quark.cn') || tab.url.startsWith('https://drive-pc.quark.cn'));
     if (isQuark) {
       pageStatusEl.textContent = '已识别夸克网盘';
       pageStatusEl.className = 'badge badge-success';

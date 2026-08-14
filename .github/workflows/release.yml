@@ -35,7 +35,8 @@ jobs:
           node -e '
             const fs = require("fs");
             const changelog = JSON.parse(fs.readFileSync("data/changelog.json"));
-            const currentTag = process.env.GITHUB_REF_NAME || "v3.0.1";
+            const manifest = JSON.parse(fs.readFileSync("manifest.json"));
+            const currentTag = process.env.GITHUB_REF_NAME || ("v" + manifest.version);
             const targetLog = changelog.find(item => item.version === currentTag) || changelog[0];
             
             let markdown = `## 🚀 夸克网盘全能管理工具 ${targetLog.version} (${targetLog.date})\n\n`;
