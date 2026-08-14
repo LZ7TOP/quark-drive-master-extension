@@ -11,6 +11,7 @@ import { exportCsvMapping, importCsvMapping } from './csv.js';
 import { openHistoryModal } from './history.js';
 import { runSingleRename, runBatchRename, runBatchDelete, promptCreateDirectory } from './actions.js';
 import { customConfirm, customAlert } from './dialogs.js';
+import { renderToolsViewComponent, bindToolsEvents, refreshToolsView } from './tools.js';
 
 export function createFloatButton() {
   if (document.getElementById('quark-rename-float-btn')) return;
@@ -101,6 +102,7 @@ export function createModalUI() {
           <div class="qr-page-nav">
             <button class="qr-nav-item active" data-view="main">${ICONS.zap} 重命名主页</button>
             <button class="qr-nav-item" data-view="csv">${ICONS.csv} CSV 工具</button>
+            <button class="qr-nav-item" data-view="tools">${ICONS.toolbox} 工具箱</button>
             <button class="qr-nav-item" data-view="changelog">${ICONS.log} 更新日志</button>
             <button class="qr-nav-item" data-view="about">${ICONS.info} 关于项目</button>
           </div>
@@ -110,6 +112,7 @@ export function createModalUI() {
       <div class="qr-body">
         <div id="viewMain" class="qr-page-view"></div>
         <div id="viewCsv" class="qr-page-view hidden"></div>
+        <div id="viewTools" class="qr-page-view hidden"></div>
         <div id="viewChangelog" class="qr-page-view hidden"></div>
         <div id="viewAbout" class="qr-page-view hidden"></div>
       </div>
@@ -139,6 +142,7 @@ export function createModalUI() {
 
   renderMainViewComponent();
   renderCsvViewComponent();
+  renderToolsViewComponent();
   loadAndRenderChangelogComponent();
   loadAndRenderAboutComponent();
 }
@@ -498,11 +502,7 @@ export async function loadAndRenderAboutComponent() {
 
   const featuresHtml = data.features
     .map((f) => {
-      let iconSvg = ICONS.zap;
-      if (f.icon === 'folder') iconSvg = ICONS.folder;
-      if (f.icon === 'history') iconSvg = ICONS.history;
-      if (f.icon === 'trash') iconSvg = ICONS.trash;
-      if (f.icon === 'table') iconSvg = ICONS.csv;
+      const iconSvg = ICONS[f.icon] || ICONS.zap;
 
       return `
       <div class="qr-feature-card">
@@ -552,10 +552,13 @@ export function switchPageView(pageId) {
 
   document.getElementById('viewMain').classList.toggle('hidden', pageId !== 'main');
   document.getElementById('viewCsv').classList.toggle('hidden', pageId !== 'csv');
+  document.getElementById('viewTools').classList.toggle('hidden', pageId !== 'tools');
   document.getElementById('viewChangelog').classList.toggle('hidden', pageId !== 'changelog');
   document.getElementById('viewAbout').classList.toggle('hidden', pageId !== 'about');
 
-  if (pageId === 'changelog') {
+  if (pageId === 'tools') {
+    refreshToolsView();
+  } else if (pageId === 'changelog') {
     loadAndRenderChangelogComponent();
   } else if (pageId === 'about') {
     loadAndRenderAboutComponent();
@@ -901,6 +904,9 @@ export function bindEvents() {
   if (deleteBtn) {
     deleteBtn.addEventListener('click', runBatchDelete);
   }
+
+  // 绑定工具箱页签事件
+  bindToolsEvents();
 
   chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action === 'TOGGLE_RENAME_PANEL') {

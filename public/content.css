@@ -1086,3 +1086,261 @@
   overflow-y: auto;
   display: none;
 }
+
+/* ============ 工具箱 (Tools) ============ */
+.qr-tools-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+.qr-tool-card {
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.qr-tool-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.qr-tool-card-header .qr-icon {
+  width: 16px;
+  height: 16px;
+  fill: #60a5fa;
+}
+
+.qr-tool-desc {
+  font-size: 12px;
+  color: #a1a1aa;
+  line-height: 1.5;
+  margin: 0 0 10px;
+}
+
+/* 目录统计 */
+.qr-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.qr-stat-item {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qr-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #60a5fa;
+}
+
+.qr-stat-label {
+  font-size: 11px;
+  color: #71717a;
+}
+
+.qr-type-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qr-type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qr-type-label {
+  width: 36px;
+  font-size: 11px;
+  color: #a1a1aa;
+  flex-shrink: 0;
+}
+
+.qr-type-bar {
+  flex: 1;
+  height: 8px;
+  background: #27272a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.qr-type-bar-inner {
+  height: 100%;
+  background: #2563eb;
+  border-radius: 4px;
+  transition: width 0.2s ease;
+}
+
+.qr-type-count {
+  width: 30px;
+  text-align: right;
+  font-size: 11px;
+  color: #d4d4d8;
+  flex-shrink: 0;
+}
+
+/* 重命名模板库 */
+.qr-template-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.qr-template-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.qr-template-btn:hover {
+  border-color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.qr-template-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.qr-template-desc {
+  font-size: 11px;
+  color: #71717a;
+}
+
+/* 工具结果区 */
+.qr-tool-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.qr-tool-tip {
+  font-size: 11px;
+  color: #a1a1aa;
+  flex: 1;
+}
+
+.qr-tool-result {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.qr-tool-empty {
+  font-size: 12px;
+  color: #4ade80;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+}
+
+.qr-tool-empty .qr-icon {
+  width: 14px;
+  height: 14px;
+  fill: #4ade80;
+}
+
+/* 重复文件检测 */
+.qr-dup-group {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.qr-dup-group-head {
+  font-size: 11px;
+  color: #fbbf24;
+  margin-bottom: 6px;
+}
+
+.qr-dup-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.qr-dup-name {
+  flex: 1;
+  color: #d4d4d8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-dup-size {
+  color: #71717a;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+/* 文件名规范检查 */
+.qr-inspect-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.qr-inspect-name {
+  flex: 1;
+  font-size: 12px;
+  color: #d4d4d8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-inspect-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.qr-inspect-tag {
+  font-size: 10px;
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: 4px;
+  padding: 1px 6px;
+}

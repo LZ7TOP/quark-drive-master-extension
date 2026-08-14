@@ -1,6 +1,6 @@
 {
   "name": "quark-drive-master-extension",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "专为夸克网盘打造的全能自动化管理助手，支持批量重命名、批量文件删除、新建文件夹、CSV导入导出、繁简转换与一键撤销。",
   "main": "src/background/index.js",
   "scripts": {
