@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "夸克网盘全能管理工具",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "专为夸克网盘打造的全能自动化管理助手，支持批量重命名、批量文件删除、新建文件夹、CSV导入导出映射、智能自然排序与一键历史撤销。",
   "minimum_chrome_version": "88",
   "icons": {
@@ -16,21 +16,11 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": [
-    "activeTab",
-    "storage",
-    "scripting"
-  ],
-  "host_permissions": [
-    "https://drive-pc.quark.cn/*",
-    "https://pan.quark.cn/*"
-  ],
+  "permissions": ["activeTab", "storage", "scripting"],
+  "host_permissions": ["https://drive-pc.quark.cn/*", "https://pan.quark.cn/*"],
   "content_scripts": [
     {
-      "matches": [
-        "https://pan.quark.cn/*",
-        "https://drive-pc.quark.cn/*"
-      ],
+      "matches": ["https://pan.quark.cn/*", "https://drive-pc.quark.cn/*"],
       "css": ["content.css"],
       "js": ["content.js"],
       "run_at": "document_end"
@@ -38,14 +28,8 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "data/*.json",
-        "icons/*"
-      ],
-      "matches": [
-        "https://drive-pc.quark.cn/*",
-        "https://pan.quark.cn/*"
-      ]
+      "resources": ["data/*.json", "icons/*"],
+      "matches": ["https://drive-pc.quark.cn/*", "https://pan.quark.cn/*"]
     }
   ]
 }

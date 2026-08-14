@@ -27,6 +27,9 @@ jobs:
       - name: Manifest Syntax Check
         run: npm run check
 
+      - name: Build Extension Bundle
+        run: npm run build:js
+
       - name: Pack Extension Asset
         run: npm run pack
 
@@ -34,8 +37,8 @@ jobs:
         run: |
           node -e '
             const fs = require("fs");
-            const changelog = JSON.parse(fs.readFileSync("data/changelog.json"));
-            const manifest = JSON.parse(fs.readFileSync("manifest.json"));
+            const changelog = JSON.parse(fs.readFileSync("public/data/changelog.json"));
+            const manifest = JSON.parse(fs.readFileSync("public/manifest.json"));
             const currentTag = process.env.GITHUB_REF_NAME || ("v" + manifest.version);
             const targetLog = changelog.find(item => item.version === currentTag) || changelog[0];
             
@@ -60,7 +63,7 @@ jobs:
       - name: Create GitHub Release and Upload Asset
         uses: softprops/action-gh-release@v2
         with:
-          name: "夸克网盘全能管理工具 ${{ github.ref_name }}"
+          name: '夸克网盘全能管理工具 ${{ github.ref_name }}'
           tag_name: ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           draft: false

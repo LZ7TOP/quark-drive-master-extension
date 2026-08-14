@@ -3,8 +3,8 @@
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
   <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销</b></p>
 
-[![Extension Release](https://img.shields.io/badge/Extension-v3.0.3-2563EB?logo=googlechrome&logoColor=white)](manifest.json)
-[![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](manifest.json)
+[![Extension Release](https://img.shields.io/badge/Extension-v3.1.0-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
+[![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author: LZ7工作室](https://img.shields.io/badge/Author-LZ7工作室-2563EB.svg)](https://github.com/LZ7TOP)
 </div>
@@ -22,6 +22,7 @@
 ## 🔥 核心大能力矩阵
 
 ### 1. ⚡ 批量重命名与行内快捷编辑 (Batch & Inline Rename)
+
 - **表格内直接打字修改**：在表格“修改后名称”列直接打字，打字状态瞬间由灰色 `未变动` 响应为绿色 `待更新`。
 - **行内单件【✓ 保存】快捷键**：为每一个手写修改的文件行生成专属 `[✓ 保存]` 按键，无需批量操作，点击即可秒级完成单件发包与历史存档。
 - **文本查找与替换**：支持普通字符串替换与正则表达式（Regex）高级匹配，支持忽略大小写。
@@ -31,18 +32,22 @@
 - **扩展名变更**：支持批量修改文件扩展名或去除特定后缀。
 
 ### 2. 🗑️ 批量文件删除 (Batch Delete)
+
 - **快捷批量移入回收站**：全面接入夸克官方 `file/delete` 接口，支持在列表勾选任意文件/文件夹后一键批量删除。
 - **高饱和警示红与二次确认**：具备严格的确认机制与实时勾选数量统计，安全高效。
 
 ### 3. 📁 当前目录快捷新建文件夹 (Create Directory)
+
 - **快捷创建新目录**：接入夸克官方 `clouddrive/file` 接口，支持在顶栏一键弹出手写 Prompt 弹窗创建新文件夹。
 - **键盘 Enter 瞬间确认**：自动全选默认名称，按 Enter 键极速完成新建并自动刷新页面。
 
 ### 4. 📄 CSV 表格协同 (CSV Interoperability)
+
 - **一键导出 CSV 文件清单**：导出当前目录全量文件名与 FID 映射关系。
 - **Excel 批量编辑后导入覆盖**：在 Excel / WPS 中完成高度个性化的修改后，一键导入覆盖，瞬间批量重命名。
 
 ### 5. ⏪ 历史快照与一键撤销 (Undo History)
+
 - **安全快照存档**：每次重命名自动存入日志快照。
 - **纯矢量 SVG 图标与向心对齐**：告别 Emoji 符号，采用标准 SVG 图标与对向聚焦对齐 (`text-align: right` / `text-align: left`)。
 - **一键反向还原与清空历史**：支持一键还原误操作文件名，并提供一键清空全部历史快照功能。
@@ -52,7 +57,7 @@
 ## 🛠️ 安装与使用方法
 
 1. **下载或拉取源码包**：
-   下载解压发布包 `release/quark-batch-rename-v3.0.3.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
+   下载解压发布包 `release/quark-batch-rename-v3.1.0.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
 2. **打开 Chrome 扩展程序页面**：
    在浏览器地址栏输入 `chrome://extensions/`，并开启右上角的 **「开发者模式」**。
 3. **加载已解压的扩展程序**：
@@ -74,21 +79,51 @@
 ## 🧪 本地开发与打包
 
 ```bash
-# 校验全项目版本号一致性与核心文件完整性
-npm run check
+# 安装依赖（esbuild + prettier）
+npm install
+
+# 校验版本一致性 + 代码格式
+npm run lint
+
+# 构建到 dist/（esbuild 打包三个入口 + 复制静态资源）
+npm run build:js
 
 # 打包生成 release/quark-batch-rename-vX.Y.Z.zip 离线包
 npm run pack
 
-# 一键校验并打包
+# 一键校验、构建并打包
 npm run build
+
+# 统一格式化所有源码
+npm run format
+```
+
+### 项目目录结构
+
+```
+├── src/                    # JS 源码（ES Modules）
+│   ├── content/            # 内容脚本（拆分后的模块）
+│   ├── background/         # Service Worker 后台
+│   └── popup/              # 弹出面板脚本
+├── public/                 # 静态资源（manifest、html、css、icons、data）
+├── scripts/                # 构建 / 打包 / 校验脚本
+├── dist/                   # 构建产物（esbuild 输出，勿手动编辑）
+└── docs/                   # 开发参考文档
 ```
 
 ---
 
 ## 📝 更新日志
 
-完整的历史版本更新明细请见 [FULL_RELEASE_NOTES.md](FULL_RELEASE_NOTES.md) 与 [data/changelog.json](data/changelog.json)，也可在插件面板的「更新日志」页签内实时查看。
+完整的历史版本更新明细请见 [FULL_RELEASE_NOTES.md](FULL_RELEASE_NOTES.md) 与 [public/data/changelog.json](public/data/changelog.json)，也可在插件面板的「更新日志」页签内实时查看。
+
+### v3.1.0 (2026-08-14)
+
+- 全面工程化目录重构：源码拆分至 `src/`，静态资源归入 `public/`，构建产物输出 `dist/`，引入 esbuild 打包。
+- 将 2000+ 行 `content.js` 单体拆分为 10+ 个职责清晰模块。
+- 重构 `background.js`，抽取公共 `apiFetch` 代理，消除 4 处重复模板。
+- 引入 `.editorconfig` / `.prettierrc` / `.prettierignore`，全量 Prettier 格式化，`npm run lint` 升级为版本 + 格式双重校验。
+- 处置夸克网页快照 `index.html` 至 `docs/`，清理 `release/` 历史压缩包。
 
 ### v3.0.3 (2026-08-11)
 

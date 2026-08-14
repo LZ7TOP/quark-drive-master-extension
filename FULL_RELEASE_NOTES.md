@@ -1,5 +1,15 @@
 # 🚀 夸克网盘全能管理工具 (Quark Drive Master) 全量版本更新日志
 
+## 📦 v3.1.0 (2026-08-14) - 工程化重构与代码规范化版
+
+- **全面工程化目录重构**：源码统一拆分至 `src/`（content / background / popup 三个入口），静态资源归入 `public/`，构建产物输出到 `dist/`，引入 esbuild 零配置打包。
+- **content.js 单体拆分**：将 2000+ 行单体脚本按职责拆分为 constants / state / utils / api / rename / csv / history / dialogs / actions / ui 等 10+ 模块，显著提升可维护性。
+- **background.js 去重重构**：抽取公共 `apiFetch` 代理函数，4 个 API 转发器由重复模板收敛为统一实现。
+- **引入统一格式规范**：新增 `.editorconfig`、`.prettierrc`、`.prettierignore`，全量 Prettier 格式化，`npm run lint` 升级为版本一致性与格式双重校验。
+- **目录与文件规范**：夸克网页快照 `index.html` 移入 `docs/`，清理 `release/` 历史压缩包。
+
+---
+
 ## 📦 v3.0.3 (2026-08-11) - 稳健性与体验全面修复版
 
 - **修复 CSV 导出重复触发 Bug**：移除导出/导入按钮的重复事件绑定，彻底解决点击一次却下载两份同名 CSV 文件的问题。
@@ -12,6 +22,12 @@
 - **修复全域版本号漂移**：统一 background.js、content.js、popup.js、package-lock.json 等文件头与版本号至 v3.0.3，并强化版本强一致性校验脚本。
 - **细化夸克页面识别**：Popup 由宽松的 quark.cn 包含判断改为精确匹配 pan.quark.cn 与 drive-pc.quark.cn。
 - **Manifest 声明最低 Chrome 版本**：新增 minimum_chrome_version 声明，避免低版本内核运行报错。
+
+---
+
+## 📦 v3.0.2 (2026-08-11) - Changelog 版本下载直达关联版
+
+- **更新日志支持历史版本直接下载**：在插件面板【更新日志】页面的每一个历史版本卡片右上角，新增专属蓝色「下载此版本」链接按钮，点击即可直接跳转 GitHub Release 对应 Tag 离线包下载页面。
 
 ---
 
@@ -91,6 +107,7 @@
 ---
 
 ### 📦 安装使用指南
+
 1. 下载下方 Assets 中的 zip 压缩包并解压。
 2. 打开 Chrome / Edge 浏览器，访问 `chrome://extensions/` 并开启 **开发者模式**。
 3. 点击 **加载已解压的扩展程序**，选择解压文件夹即可使用。

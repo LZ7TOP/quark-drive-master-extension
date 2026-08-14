@@ -1,0 +1,8 @@
+node_modules
+dist
+release
+docs
+public/icons
+package-lock.json
+*.zip
+*.png

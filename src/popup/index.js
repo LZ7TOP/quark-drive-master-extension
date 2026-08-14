@@ -1,4 +1,6 @@
-// 夸克网盘全能管理工具 - Popup Script (v3.0.3)
+/**
+ * 夸克网盘全能管理工具 - Popup Script 入口
+ */
 
 document.addEventListener('DOMContentLoaded', async () => {
   const pageStatusEl = document.getElementById('pageStatus');
@@ -56,7 +58,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     });
-
   } catch (e) {
     console.error(e);
   }

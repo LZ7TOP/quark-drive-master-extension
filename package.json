@@ -1,13 +1,16 @@
 {
   "name": "quark-drive-master-extension",
-  "version": "3.0.3",
+  "version": "3.1.0",
   "description": "专为夸克网盘打造的全能自动化管理助手，支持批量重命名、批量文件删除、新建文件夹、CSV导入导出、繁简转换与一键撤销。",
-  "main": "background.js",
+  "main": "src/background/index.js",
   "scripts": {
     "check": "node scripts/verify-versions.js",
-    "lint": "npm run check",
+    "build:js": "node scripts/build.js",
     "pack": "node scripts/pack.js",
-    "build": "npm run check && npm run pack"
+    "build": "npm run check && npm run build:js && npm run pack",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "npm run check && npm run format:check"
   },
   "keywords": [
     "quark",
@@ -25,5 +28,9 @@
   "homepage": "https://github.com/LZ7TOP/quark-drive-master-extension#readme",
   "bugs": {
     "url": "https://github.com/LZ7TOP/quark-drive-master-extension/issues"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "prettier": "^3.9.6"
   }
 }
