@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="icons/icon-128.png" width="100" height="100" alt="Logo" />
+  <img src="public/icons/icon-128.png" width="100" height="100" alt="Logo" />
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
   <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销 · 实用工具箱</b></p>
 
