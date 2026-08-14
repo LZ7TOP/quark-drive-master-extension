@@ -1372,3 +1372,48 @@
   color: #60a5fa;
   background: rgba(37, 99, 235, 0.1);
 }
+
+/* Toast 提示（顶部居中，自动消失） */
+.qr-toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-16px);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 420px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #fafafa;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
+}
+
+.qr-toast.qr-toast-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.qr-toast.qr-toast-hide {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-16px);
+}
+
+.qr-toast .qr-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.qr-toast span {
+  line-height: 1.4;
+  word-break: break-all;
+}

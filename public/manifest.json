@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "夸克网盘全能管理工具",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "description": "专为夸克网盘打造的全能自动化管理助手，支持批量重命名、批量文件删除、新建文件夹、CSV导入导出映射、智能自然排序与一键历史撤销。",
   "minimum_chrome_version": "88",
   "icons": {

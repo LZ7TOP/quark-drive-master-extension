@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { ICONS } from './constants.js';
 import { log, friendlyErrorMessage } from './utils.js';
-import { customAlert, customConfirm, customPrompt } from './dialogs.js';
+import { customAlert, customConfirm, customPrompt, toast } from './dialogs.js';
 import { requestRename, requestCreateDirectory, requestDeleteFiles, fetchFileList } from './api.js';
 import { saveHistorySnapshot } from './history.js';
 import { recalculateNewNames } from './rename.js';
@@ -29,7 +29,7 @@ export async function runSingleRename(file) {
       file.file_name = file.new_name;
       renderTable();
       updateStatText();
-      customAlert('修改成功', `已成功将 "${oldName}" 重命名为 "${file.new_name}"！`);
+      toast(`已成功将 "${oldName}" 重命名为 "${file.new_name}"`);
     } else {
       log(`修改失败: ${res?.message || res?.error || '请求受阻'}`);
       customAlert('修改失败', res?.message || res?.error || '单件重命名失败');
@@ -128,7 +128,7 @@ export function promptCreateDirectory() {
       const res = await requestCreateDirectory(state.pdir_fid, folderName);
       if (res && (res.code === 0 || res.status === 200)) {
         log(`文件夹 "${folderName}" 创建成功！`);
-        customAlert('创建成功', `已在当前目录下成功新建文件夹 "${folderName}"。`);
+        toast(`已在当前目录下成功新建文件夹 "${folderName}"`);
         fetchFileList();
       } else {
         const errMsg = friendlyErrorMessage(res);
@@ -168,7 +168,7 @@ export async function runBatchDelete() {
       const res = await requestDeleteFiles(fids);
       if (res && (res.code === 0 || res.status === 200)) {
         log(`批量删除成功: 共删除 ${selectedFiles.length} 项文件！`);
-        customAlert('删除成功', `已成功将 ${selectedFiles.length} 个文件/文件夹移入夸克回收站。`);
+        toast(`已成功将 ${selectedFiles.length} 个文件/文件夹移入夸克回收站`);
         fetchFileList();
       } else {
         log(`批量删除失败: ${res?.message || res?.error || '请求受阻'}`);

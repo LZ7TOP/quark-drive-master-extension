@@ -3,7 +3,7 @@
  */
 
 import { state } from './state.js';
-import { customAlert } from './dialogs.js';
+import { customAlert, toast } from './dialogs.js';
 import { log, parseCsvLine } from './utils.js';
 import { switchPageView, renderTable } from './ui.js';
 
@@ -59,7 +59,7 @@ export function importCsvMapping(file) {
 
       switchPageView('main');
       renderTable();
-      customAlert('导入成功', `已从 CSV 表格中读取并匹配了 ${matchCount} 个文件的修改映射！`);
+      toast(`已从 CSV 表格读取并匹配 ${matchCount} 个文件的修改映射`);
       log(`导入 CSV 表格匹配成功: ${matchCount} 项`);
     } catch (err) {
       customAlert('解析错误', 'CSV 文件格式解析异常。');

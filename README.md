@@ -3,7 +3,7 @@
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
   <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销 · 实用工具箱</b></p>
 
-[![Extension Release](https://img.shields.io/badge/Extension-v3.2.1-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
+[![Extension Release](https://img.shields.io/badge/Extension-v3.2.2-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author: LZ7工作室](https://img.shields.io/badge/Author-LZ7工作室-2563EB.svg)](https://github.com/LZ7TOP)
@@ -72,7 +72,7 @@
 ## 🛠️ 安装与使用方法
 
 1. **下载或拉取源码包**：
-   下载解压发布包 `release/quark-batch-rename-v3.2.1.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
+   下载解压发布包 `release/quark-batch-rename-v3.2.2.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
 2. **打开 Chrome 扩展程序页面**：
    在浏览器地址栏输入 `chrome://extensions/`，并开启右上角的 **「开发者模式」**。
 3. **加载已解压的扩展程序**：
@@ -131,6 +131,11 @@ npm run format
 ## 📝 更新日志
 
 完整的历史版本更新明细请见 [FULL_RELEASE_NOTES.md](FULL_RELEASE_NOTES.md) 与 [public/data/changelog.json](public/data/changelog.json)，也可在插件面板的「更新日志」页签内实时查看。
+
+### v3.2.2 (2026-08-14)
+
+- 成功提示改为顶部居中、自动消失的 Toast，无需再点击「确定」。
+- 失败 / 异常仍保留需确认的弹窗，确保错误信息被注意到。
 
 ### v3.2.1 (2026-08-14)
 

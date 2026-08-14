@@ -1,11 +1,11 @@
 /**
- * 工具箱：目录统计、重复文件检测、文件名规范检查、重命名模板库
+ * 工具箱：目录统计、重复文件检测、文件名规范检查
  */
 
 import { state } from './state.js';
 import { ICONS } from './constants.js';
 import { escapeHtml, log } from './utils.js';
-import { customAlert, customConfirm } from './dialogs.js';
+import { customAlert, customConfirm, toast } from './dialogs.js';
 import { requestDeleteFiles, fetchFileList } from './api.js';
 import { renderTable, updateStatText } from './ui.js';
 
@@ -151,7 +151,7 @@ function detectDuplicates() {
         if (!ok) return;
         const res = await requestDeleteFiles(fids);
         if (res && (res.code === 0 || res.status === 200)) {
-          customAlert('删除成功', `已删除 ${fids.length} 个重复文件。`);
+          toast(`已删除 ${fids.length} 个重复文件`);
           fetchFileList();
           resultEl.innerHTML = '';
         } else {

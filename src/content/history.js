@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { ICONS } from './constants.js';
 import { escapeHtml, log } from './utils.js';
-import { customAlert, customConfirm } from './dialogs.js';
+import { customAlert, customConfirm, toast } from './dialogs.js';
 import { requestRename, fetchFileList } from './api.js';
 
 export function saveHistorySnapshot(items) {
@@ -170,7 +170,7 @@ export async function runUndoHistory(record) {
     }
 
     state.isRunning = false;
-    customAlert('撤销完成', `成功还原 ${success} 个文件，失败 ${fail} 个。`);
+    toast(`撤销完成：成功还原 ${success} 个文件，失败 ${fail} 个`);
     fetchFileList();
   });
 }
