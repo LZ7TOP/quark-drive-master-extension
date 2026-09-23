@@ -6,7 +6,7 @@ import { state } from './state.js';
 import { ICONS } from './constants.js';
 import { escapeHtml, log } from './utils.js';
 import { customAlert, customConfirm, toast } from './dialogs.js';
-import { requestDeleteFiles, fetchFileList } from './api.js';
+import { requestDeleteFiles, requestMoveFiles, scanSubdirectoryFiles, fetchFileList } from './api.js';
 import { renderTable, updateStatText } from './ui.js';
 
 const TYPE_PATTERNS = {
@@ -224,6 +224,176 @@ function fixNames() {
   log(`已修复 ${fixed} 个文件名，请在主面板确认后点击「开始批量重命名」生效`);
 }
 
+let currentFlattenScan = null;
+
+async function scanFlattenSubdirs() {
+  const resultEl = document.getElementById('qrFlattenResult');
+  const scanBtn = document.getElementById('qrScanFlattenBtn');
+  if (!resultEl) return;
+
+  const currentFid = state.pdir_fid || '0';
+  resultEl.innerHTML = `<div class="qr-tool-tip">🔍 正在深度扫描子目录及包含的文件 (FID: ${escapeHtml(currentFid)})...</div>`;
+  if (scanBtn) scanBtn.disabled = true;
+
+  try {
+    const scanData = await scanSubdirectoryFiles(currentFid);
+    currentFlattenScan = scanData;
+
+    const subDirCount = scanData.subDirs.length;
+    const fileCount = scanData.filesToMove.length;
+    const totalSize = scanData.filesToMove.reduce((sum, f) => sum + f.size, 0);
+
+    if (fileCount === 0) {
+      if (subDirCount === 0) {
+        resultEl.innerHTML = `<div class="qr-tool-empty">${ICONS.check} 当前目录下未检测到任何子文件夹</div>`;
+      } else {
+        resultEl.innerHTML = `<div class="qr-tool-empty">${ICONS.check} 发现 ${subDirCount} 个子文件夹，但内部均为空或无文件</div>`;
+      }
+      return;
+    }
+
+    // 按子目录分组汇总展示
+    const dirMap = {};
+    scanData.filesToMove.forEach((f) => {
+      const dirName = f.parentDir || '子目录';
+      if (!dirMap[dirName]) dirMap[dirName] = [];
+      dirMap[dirName].push(f);
+    });
+
+    const groupHtml = Object.entries(dirMap)
+      .map(([dirName, files]) => {
+        const dirSize = files.reduce((s, x) => s + x.size, 0);
+        return `
+          <div class="qr-flatten-group">
+            <div class="qr-flatten-group-title">
+              <span>📁 ${escapeHtml(dirName)}</span>
+              <span class="qr-flatten-group-meta">${files.length} 个文件 · ${formatSize(dirSize)}</span>
+            </div>
+            <div class="qr-flatten-file-list">
+              ${files
+                .slice(0, 8)
+                .map(
+                  (f) => `
+                <div class="qr-flatten-file-item">
+                  <span class="qr-flatten-file-name" title="${escapeHtml(f.file_name)}">${escapeHtml(f.file_name)}</span>
+                  <span class="qr-flatten-file-size">${formatSize(f.size)}</span>
+                </div>
+              `
+                )
+                .join('')}
+              ${files.length > 8 ? `<div class="qr-flatten-more">... 及其余 ${files.length - 8} 个文件</div>` : ''}
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    resultEl.innerHTML = `
+      <div class="qr-tool-tip">
+        共扫描到 <b>${subDirCount}</b> 个子文件夹，包含 <b>${fileCount}</b> 个文件，总大小 <b>${formatSize(totalSize)}</b>。
+      </div>
+      <div class="qr-flatten-groups-container">
+        ${groupHtml}
+      </div>
+      <div class="qr-tool-actions" style="margin-top: 12px; align-items: center; justify-content: space-between;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #d4d4d8; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="qrCleanEmptyDirsCb" checked style="cursor: pointer;">
+          移出完成后自动清理已清空的子文件夹
+        </label>
+        <button id="qrExecuteFlattenBtn" class="qr-btn-tool qr-btn-green" style="padding: 6px 16px;">
+          ${ICONS.zap} 一键提取到当前目录 (${fileCount})
+        </button>
+      </div>
+    `;
+
+    const execBtn = document.getElementById('qrExecuteFlattenBtn');
+    if (execBtn) {
+      execBtn.addEventListener('click', executeFlattenMove);
+    }
+  } catch (err) {
+    resultEl.innerHTML = `<div class="qr-tool-empty" style="color: #ef4444;">扫描失败: ${escapeHtml(err.message)}</div>`;
+  } finally {
+    if (scanBtn) scanBtn.disabled = false;
+  }
+}
+
+async function executeFlattenMove() {
+  if (!currentFlattenScan || currentFlattenScan.filesToMove.length === 0) {
+    customAlert('提示', '暂无可移动的子目录文件，请先点击扫描。');
+    return;
+  }
+
+  const { filesToMove, subDirs } = currentFlattenScan;
+  const currentFid = state.pdir_fid || '0';
+  const cleanEmpty = document.getElementById('qrCleanEmptyDirsCb')?.checked ?? true;
+
+  customConfirm(
+    '确认提取子文件',
+    `⚠️ 确认将 ${filesToMove.length} 个文件从各个子文件夹移出至当前目录层级吗？${cleanEmpty ? '\n（操作完成后将自动清理已清空的子文件夹）' : ''}`,
+    async (confirmed) => {
+      if (!confirmed) return;
+
+      const execBtn = document.getElementById('qrExecuteFlattenBtn');
+      const scanBtn = document.getElementById('qrScanFlattenBtn');
+      if (execBtn) {
+        execBtn.disabled = true;
+        execBtn.innerHTML = '正在批量移出文件...';
+      }
+      if (scanBtn) scanBtn.disabled = true;
+
+      try {
+        const fileFids = filesToMove.map((f) => f.fid);
+        log(`开始批量移出 ${fileFids.length} 个文件到当前目录 (FID: ${currentFid})...`);
+
+        // 批量分段移动（每批 80 个，兼顾稳定与速度）
+        const BATCH_SIZE = 80;
+        let successFiles = 0;
+        for (let i = 0; i < fileFids.length; i += BATCH_SIZE) {
+          const chunk = fileFids.slice(i, i + BATCH_SIZE);
+          const moveRes = await requestMoveFiles(chunk, currentFid);
+          if (moveRes && (moveRes.code === 0 || moveRes.status === 200)) {
+            successFiles += chunk.length;
+          } else {
+            throw new Error(moveRes?.message || moveRes?.error || '批量移动接口响应异常');
+          }
+        }
+
+        log(`文件移动完毕，共成功移出 ${successFiles} 个文件！`);
+
+        // 若勾选了清理空子文件夹
+        if (cleanEmpty && subDirs.length > 0) {
+          log(`正在自动清理 ${subDirs.length} 个已清空的子文件夹...`);
+          const dirFids = subDirs.map((d) => d.fid);
+          for (let i = 0; i < dirFids.length; i += BATCH_SIZE) {
+            const dirChunk = dirFids.slice(i, i + BATCH_SIZE);
+            await requestDeleteFiles(dirChunk);
+          }
+          log(`已清空子文件夹清理完成！`);
+        }
+
+        toast(`已成功将 ${successFiles} 个文件提取到当前目录！`);
+        currentFlattenScan = null;
+        const resultEl = document.getElementById('qrFlattenResult');
+        if (resultEl) {
+          resultEl.innerHTML = `<div class="qr-tool-empty">${ICONS.check} 已成功将 ${successFiles} 个文件提取到当前目录！</div>`;
+        }
+
+        // 联动刷新主面板文件列表与统计
+        fetchFileList();
+      } catch (err) {
+        log(`提取移动异常: ${err.message}`);
+        customAlert('移出失败', err.message || '移动文件时遇到错误');
+      } finally {
+        if (execBtn) {
+          execBtn.disabled = false;
+          execBtn.innerHTML = `${ICONS.zap} 一键提取到当前目录`;
+        }
+        if (scanBtn) scanBtn.disabled = false;
+      }
+    }
+  );
+}
+
 export function renderToolsViewComponent() {
   const toolsViewEl = document.getElementById('viewTools');
   if (!toolsViewEl) return;
@@ -234,6 +404,13 @@ export function renderToolsViewComponent() {
         <div class="qr-tool-card-header">${ICONS.stats} 目录统计</div>
         <div id="qrStatsGrid" class="qr-stat-grid"></div>
         <div id="qrTypeDist" class="qr-type-dist"></div>
+      </div>
+
+      <div class="qr-tool-card">
+        <div class="qr-tool-card-header">${ICONS.folder} 提取子文件夹内容（目录扁平化）</div>
+        <p class="qr-tool-desc">深度扫描当前目录下的所有子文件夹，将分散在子目录里的剧集、课程或分卷文件统一移出平铺到当前层级。</p>
+        <button id="qrScanFlattenBtn" class="qr-btn-tool qr-btn-blue">开始扫描子文件夹</button>
+        <div id="qrFlattenResult" class="qr-tool-result"></div>
       </div>
 
       <div class="qr-tool-card">
@@ -257,10 +434,12 @@ export function renderToolsViewComponent() {
 }
 
 export function bindToolsEvents() {
+  const flattenBtn = document.getElementById('qrScanFlattenBtn');
   const detectBtn = document.getElementById('qrDetectDupBtn');
   const inspectBtn = document.getElementById('qrInspectBtn');
   const fixBtn = document.getElementById('qrFixNamesBtn');
 
+  if (flattenBtn) flattenBtn.addEventListener('click', scanFlattenSubdirs);
   if (detectBtn) detectBtn.addEventListener('click', detectDuplicates);
   if (inspectBtn) inspectBtn.addEventListener('click', inspectNames);
   if (fixBtn) fixBtn.addEventListener('click', fixNames);

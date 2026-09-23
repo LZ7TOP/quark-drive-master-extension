@@ -92,5 +92,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  // 后台代理 POST 移动文件/文件夹
+  if (request.action === 'API_MOVE_FILES') {
+    const url = `${API_BASE}/file/move?${COMMON_QUERY}`;
+    const payload = {
+      action_type: 2,
+      filelist: Array.isArray(request.fids) ? request.fids : [request.fids],
+      to_pdir_fid: request.to_pdir_fid || '0'
+    };
+
+    apiFetch(url, { method: 'POST', payload }).then(sendResponse);
+    return true;
+  }
+
   return false;
 });

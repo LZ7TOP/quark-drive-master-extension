@@ -1,14 +1,19 @@
 {
   "project": {
     "name": "夸克网盘全能管理工具",
-    "version": "3.2.2",
+    "version": "3.3.0",
     "author": "LZ7 工作室 (LZ7 Studio)",
     "url": "https://github.com/LZ7TOP/quark-drive-master-extension",
     "releaseUrl": "https://github.com/LZ7TOP/quark-drive-master-extension/releases",
-    "description": "专为夸克网盘 Web 端打造的全能自动化管理助手，集批量重命名、行内快捷编辑、批量删除、快捷新建文件夹、CSV 映射协同、历史一键撤销、文件类型过滤与智能排序于一体。",
+    "description": "专为夸克网盘 Web 端打造的全能自动化管理助手，集批量重命名、行内快捷编辑、批量删除、快捷新建文件夹、子文件夹内容平铺提取（扁平化）、CSV 映射协同、历史一键撤销、文件类型过滤与智能排序于一体。",
     "license": "MIT"
   },
   "features": [
+    {
+      "icon": "folder",
+      "title": "子文件夹内容平铺提取（目录扁平化）",
+      "desc": "一键深度扫描当前目录下所有子文件夹，将分散在子目录里的剧集、课程或文件批量移出平铺至当前目录，并支持一键自动清理已清空的子文件夹。"
+    },
     {
       "icon": "zap",
       "title": "批量重命名与正则替换",

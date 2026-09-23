@@ -1417,3 +1417,71 @@
   line-height: 1.4;
   word-break: break-all;
 }
+
+/* 提取子文件夹内容（目录扁平化） */
+.qr-flatten-groups-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding-right: 4px;
+}
+
+.qr-flatten-group {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.qr-flatten-group-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #60a5fa;
+  margin-bottom: 6px;
+}
+
+.qr-flatten-group-meta {
+  font-size: 11px;
+  color: #71717a;
+}
+
+.qr-flatten-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qr-flatten-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: #d4d4d8;
+  padding: 2px 0;
+}
+
+.qr-flatten-file-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.qr-flatten-file-size {
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.qr-flatten-more {
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 2px;
+  font-style: italic;
+}

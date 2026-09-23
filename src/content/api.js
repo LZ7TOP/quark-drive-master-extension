@@ -128,6 +128,100 @@ export async function requestDeleteFiles(fids) {
   });
 }
 
+// 夸克 API 批量移动文件/文件夹函数（前台同源优先发包与后台代理降级双保险）
+export async function requestMoveFiles(fids, toPdirFid) {
+  if (!Array.isArray(fids)) fids = [fids];
+  const payload = {
+    action_type: 2,
+    filelist: fids,
+    to_pdir_fid: toPdirFid || '0'
+  };
+
+  try {
+    const url = 'https://drive-pc.quark.cn/1/clouddrive/file/move?pr=ucpro&fr=pc&uc_param_str=';
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json;charset=UTF-8'
+      },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    const text = await resp.text();
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (parseErr) {
+      console.warn('前台移动 fetch 解析非 JSON，自动降级为 Service Worker 代理');
+    }
+  } catch (e) {
+    console.warn('前台移动网络异常，自动降级到 Service Worker 后台:', e);
+  }
+
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ action: 'API_MOVE_FILES', fids: fids, to_pdir_fid: toPdirFid }, (resp) => {
+      if (chrome.runtime.lastError || !resp || !resp.success) {
+        resolve({ code: -1, message: resp?.error || chrome.runtime.lastError?.message || '移动请求失败' });
+      } else {
+        resolve(resp.data);
+      }
+    });
+  });
+}
+
+// 递归扫描当前目录下的所有子文件夹及内部文件（用于子目录内容平铺提取）
+export async function scanSubdirectoryFiles(parentPdirFid) {
+  const result = {
+    subDirs: [], // 子文件夹列表 [{ fid, file_name, path, pdir_fid }]
+    filesToMove: [] // 待移出的文件列表 [{ fid, file_name, size, parentDir, pdir_fid }]
+  };
+
+  async function traverse(pdirFid, currentPath, depth = 0) {
+    if (depth > 6) return;
+
+    const res = await new Promise((resolve) => {
+      chrome.runtime.sendMessage({ action: 'API_FETCH_DIRECTORY', pdir_fid: pdirFid }, (resp) => {
+        if (chrome.runtime.lastError || !resp) {
+          resolve({ success: false, error: chrome.runtime.lastError?.message || '通讯异常' });
+        } else {
+          resolve(resp);
+        }
+      });
+    });
+
+    if (!res.success || !res.data?.data?.list) return;
+
+    const items = res.data.data.list;
+    for (const item of items) {
+      const isDir = item.dir || item.file_type === 'dir' || item.file_type === 0;
+      const relPath = currentPath ? `${currentPath}/${item.file_name}` : item.file_name;
+
+      if (isDir) {
+        result.subDirs.push({
+          fid: item.fid,
+          file_name: item.file_name,
+          path: relPath,
+          pdir_fid: pdirFid
+        });
+        await traverse(item.fid, relPath, depth + 1);
+      } else if (depth > 0) {
+        // 仅收集位于子目录内部的文件（不包含当前顶层目录本就存在的文件）
+        result.filesToMove.push({
+          fid: item.fid,
+          file_name: item.file_name,
+          size: Number(item.size) || 0,
+          parentDir: currentPath,
+          pdir_fid: pdirFid
+        });
+      }
+    }
+  }
+
+  // 从当前顶层目录开始扫描子项
+  await traverse(parentPdirFid, '', 0);
+  return result;
+}
+
 // 完美安全代理后台 Fetch，彻底解决跨域 CORS TypeError: Failed to fetch
 export async function loadDirectoryFiles(pdirFid, currentPath, depth = 0) {
   if (depth > 5) return;
