@@ -4,15 +4,23 @@
 
 import { state } from './state.js';
 import { ICONS, DEFAULT_CHANGELOG_DATA, RENAME_TEMPLATES } from './constants.js';
-import { escapeHtml, fetchJsonData, log } from './utils.js';
-import { fetchFileList } from './api.js';
+import { escapeHtml, fetchJsonData, formatSize, log } from './utils.js';
+import { fetchFileList, requestAccountQuota, searchDriveFiles } from './api.js';
 import { recalculateNewNames, updateConfigFromUI } from './rename.js';
 import { exportCsvMapping, importCsvMapping } from './csv.js';
 import { openHistoryModal } from './history.js';
-import { runSingleRename, runBatchRename, runBatchDelete, promptCreateDirectory } from './actions.js';
-import { customConfirm, customAlert } from './dialogs.js';
+import {
+  promptCreateDirectory,
+  runBatchDelete,
+  runBatchMove,
+  runBatchRename,
+  runExtractDownloadLinks,
+  runSingleRename
+} from './actions.js';
+import { customConfirm, customAlert, toast } from './dialogs.js';
 import { renderToolsViewComponent, bindToolsEvents, refreshToolsView } from './tools.js';
-import { renderSharesViewComponent, bindSharesEvents, onEnterSharesView, fetchAllMyShares } from './shares.js';
+import { bindSharesEvents, fetchAllMyShares, onEnterSharesView, prependCreatedShares, renderSharesViewComponent } from './shares.js';
+import { openCreateShareModal } from './share-actions.js';
 
 export function createFloatButton() {
   if (document.getElementById('quark-rename-float-btn')) return;
@@ -69,6 +77,52 @@ export function parseUrlAndSyncState() {
   }
 }
 
+export async function refreshAccountQuotaUI(forceFetch = false) {
+  const pill = document.getElementById('qrAccountPill');
+  if (!pill) return;
+
+  if (forceFetch) {
+    pill.innerHTML = `<span class="qr-account-name">${ICONS.user} 读取容量中...</span>`;
+    await requestAccountQuota();
+  }
+
+  const acc = state.account;
+  if (!acc || !acc.loaded) {
+    pill.innerHTML = `<span class="qr-account-name">${ICONS.user} 检测账号...</span>`;
+    return;
+  }
+
+  if (!acc.loggedIn) {
+    pill.innerHTML = `<span class="qr-account-name" style="color:#fbbf24;">${ICONS.user} 未登录账号</span>`;
+    return;
+  }
+
+  const tier = String(acc.member_type || 'NORMAL').toUpperCase();
+  const tierBadge = tier.includes('SVIP')
+    ? `<span class="qr-member-badge qr-member-svip">SVIP</span>`
+    : tier.includes('VIP')
+      ? `<span class="qr-member-badge qr-member-vip">VIP</span>`
+      : '';
+
+  const hasCap = acc.total_capacity > 0;
+  const pct = hasCap ? Math.min(100, Math.round((acc.use_capacity / acc.total_capacity) * 100)) : 0;
+  const barCls = pct >= 95 ? 'is-danger' : pct >= 85 ? 'is-warn' : '';
+  const capText = hasCap ? `${formatSize(acc.use_capacity)} / ${formatSize(acc.total_capacity)}` : '容量未知';
+
+  pill.innerHTML = `
+    <span class="qr-account-user" title="${escapeHtml(acc.nickname)}">
+      ${ICONS.user}
+      <span class="qr-account-name">${escapeHtml(acc.nickname || '夸克用户')}</span>
+      ${tierBadge}
+    </span>
+    <span class="qr-account-sep">|</span>
+    <span class="qr-quota-mini" title="已用 ${pct}%（点击刷新账号配额）">
+      <span class="qr-quota-mini-text">${capText}</span>
+      ${hasCap ? `<span class="qr-quota-mini-bar"><span class="qr-quota-mini-fill ${barCls}" style="width:${pct}%"></span></span>` : ''}
+    </span>
+  `;
+}
+
 export function createModalUI() {
   if (document.getElementById('qrModalOverlay')) return;
 
@@ -98,7 +152,7 @@ export function createModalUI() {
           </div>
         </div>
 
-        <!-- 第二排：Tab 导航页签组 -->
+        <!-- 第二排：Tab 导航页签组 + 账号与容量胶囊 -->
         <div class="qr-header-bottom">
           <div class="qr-page-nav">
             <button class="qr-nav-item active" data-view="main">${ICONS.zap} 重命名主页</button>
@@ -107,6 +161,9 @@ export function createModalUI() {
             <button class="qr-nav-item" data-view="tools">${ICONS.toolbox} 工具箱</button>
             <button class="qr-nav-item" data-view="changelog">${ICONS.log} 更新日志</button>
             <button class="qr-nav-item" data-view="about">${ICONS.info} 关于项目</button>
+          </div>
+          <div id="qrAccountPill" class="qr-account-pill" role="button" tabindex="0" title="当前账号与剩余容量（点击刷新）">
+            <span class="qr-account-name">${ICONS.user} 读取账号中...</span>
           </div>
         </div>
       </div>
@@ -128,12 +185,13 @@ export function createModalUI() {
         <div class="qr-footer-actions">
           <div class="qr-delay-setting">
             <label>请求间隔(ms):</label>
-            <input type="number" id="qrDelayInput" class="qr-input" value="500" min="100" max="3000" style="width: 75px; padding: 3px 6px;">
-            <span style="font-size: 11px; color: #71717a;">(推荐500ms)</span>
+            <input type="number" id="qrDelayInput" class="qr-input" value="500" min="100" max="3000" style="width: 68px; padding: 3px 6px;">
+            <span style="font-size: 11px; color: #71717a;">(推荐500)</span>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span id="qrStatText" style="font-size: 12px; color: #a1a1aa;">共 0 项文件</span>
-            <button id="qrDeleteBtn" class="qr-btn-primary qr-btn-red">${ICONS.trash} 批量删除选中</button>
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <span id="qrStatText" style="font-size: 11px; color: #a1a1aa;">共 0 项文件</span>
+            <button id="qrMoveBtn" class="qr-btn-primary qr-btn-blue-solid">${ICONS.move} 批量移动 (0)</button>
+            <button id="qrDeleteBtn" class="qr-btn-primary qr-btn-red">${ICONS.trash} 批量删除 (0)</button>
             <button id="qrStartBtn" class="qr-btn-primary">${ICONS.zap} 开始批量重命名</button>
           </div>
         </div>
@@ -248,11 +306,18 @@ export function renderMainViewComponent() {
       { value: 'size_desc', label: '文件大小降序' }
     ],
     'natural_asc',
-    'min-width: 155px;'
+    'min-width: 142px;'
   );
 
   mainViewEl.innerHTML = `
-    <div id="qrBreadcrumbsBar" class="qr-breadcrumbs-bar"></div>
+    <div id="qrBreadcrumbsBar" class="qr-breadcrumbs-bar qr-breadcrumbs-bar-split">
+      <div id="qrBreadcrumbsTrail" class="qr-breadcrumbs-trail"></div>
+      <div class="qr-breadcrumbs-ops">
+        <button type="button" id="qrFetchSelectedBtn" class="qr-btn-tool qr-btn-green" style="height: 24px; padding: 0 8px; font-size: 11px;" title="抓取夸克网页中选中的文件">${ICONS.target} 抓取选中</button>
+        <button type="button" id="qrBatchShareBtn" class="qr-btn-tool qr-btn-purple" style="height: 24px; padding: 0 8px; font-size: 11px;" title="为当前勾选的文件/文件夹一键生成分享链接">${ICONS.share} 创建分享</button>
+        <button type="button" id="qrDownloadLinksBtn" class="qr-btn-tool qr-btn-blue" style="height: 24px; padding: 0 8px; font-size: 11px;" title="批量提取已选文件的官方下载直链并支持导出 Aria2 任务">${ICONS.download} 提取直链</button>
+      </div>
+    </div>
 
     <div class="qr-controls-header">
       <div class="qr-tabs">
@@ -363,17 +428,23 @@ export function renderMainViewComponent() {
         <span class="qr-chip" data-type="doc">文档</span>
         <span class="qr-chip" data-type="dir">文件夹</span>
       </div>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <button id="qrFetchSelectedBtn" class="qr-btn-tool qr-btn-green" style="height: 26px; padding: 0 8px;" title="抓取夸克网页中选中的文件">${ICONS.target} 抓取选中</button>
+      <div style="display: flex; gap: 8px; align-items: center;">
         <div style="display: flex; align-items: center; gap: 4px;">
           <label style="font-size: 11px; color: #a1a1aa; white-space: nowrap;">排序:</label>
           ${sortBySelectHtml}
         </div>
 
         <label class="qr-checkbox-label" style="color: #a1a1aa; font-weight: 500;" title="深度递归获取当前目录下所有子文件夹里面的文件">
-          <input type="checkbox" id="qrIncludeSubDirs"> 递归所有子目录
+          <input type="checkbox" id="qrIncludeSubDirs"> 递归子目录
         </label>
-        <input type="text" id="qrKeywordInput" class="qr-input" placeholder="搜索过滤..." style="padding: 2px 6px; font-size: 11px; width: 100px; height: 26px;">
+
+        <div class="qr-search-scope-group" id="qrSearchScopeGroup" title="切换“当前目录即时过滤”与“跨目录全盘检索”">
+          <button type="button" class="qr-seg-btn active" data-scope="local">当前过滤</button>
+          <button type="button" class="qr-seg-btn" data-scope="cloud">全盘搜索</button>
+        </div>
+
+        <input type="text" id="qrKeywordInput" class="qr-input" placeholder="过滤文件名..." style="padding: 2px 6px; font-size: 11px; width: 118px; height: 26px; flex: none;">
+        <button type="button" id="qrCloudSearchBtn" class="qr-btn-tool qr-btn-blue hidden" style="height: 26px; padding: 0 8px; font-size: 11px;" title="提交关键词在全盘范围搜索">${ICONS.search} 搜全盘</button>
       </div>
     </div>
 
@@ -586,14 +657,32 @@ export function switchPageView(pageId) {
 }
 
 export function renderBreadcrumbs() {
-  const bar = document.getElementById('qrBreadcrumbsBar');
-  if (!bar) return;
+  const trail = document.getElementById('qrBreadcrumbsTrail');
+  if (!trail) return;
+
+  if (state.mainMode === 'search') {
+    const totalInfo =
+      state.searchTotal > state.fileList.length ? `${state.fileList.length} / 共 ${state.searchTotal}` : `${state.fileList.length}`;
+    trail.innerHTML = `
+      <span class="qr-crumb-item current">${ICONS.search} 全盘搜索: 「${escapeHtml(state.searchQuery)}」(${totalInfo} 项)</span>
+      <button type="button" id="qrExitSearchBtn" class="qr-btn-tool qr-btn-amber" style="height: 22px; padding: 0 8px; font-size: 11px; margin-left: 6px;">返回原目录</button>
+    `;
+    const exitBtn = document.getElementById('qrExitSearchBtn');
+    if (exitBtn) {
+      exitBtn.addEventListener('click', () => {
+        state.mainMode = 'dir';
+        renderBreadcrumbs();
+        fetchFileList();
+      });
+    }
+    return;
+  }
 
   if (state.breadcrumbs.length === 0) {
     state.breadcrumbs = [{ fid: state.pdir_fid, name: '当前目录' }];
   }
 
-  bar.innerHTML = state.breadcrumbs
+  trail.innerHTML = state.breadcrumbs
     .map((crumb, idx) => {
       const isLast = idx === state.breadcrumbs.length - 1;
       if (isLast) {
@@ -606,11 +695,12 @@ export function renderBreadcrumbs() {
     })
     .join('');
 
-  bar.querySelectorAll('.qr-crumb-item[data-fid]').forEach((el) => {
+  trail.querySelectorAll('.qr-crumb-item[data-fid]').forEach((el) => {
     el.addEventListener('click', (e) => {
       const targetFid = e.currentTarget.dataset.fid;
-      const targetIdx = parseInt(e.currentTarget.dataset.idx);
+      const targetIdx = parseInt(e.currentTarget.dataset.idx, 10);
 
+      state.mainMode = 'dir';
       state.pdir_fid = targetFid;
       state.breadcrumbs = state.breadcrumbs.slice(0, targetIdx + 1);
 
@@ -722,9 +812,23 @@ export function renderTable() {
     link.addEventListener('click', (e) => {
       const fid = e.currentTarget.dataset.fid;
       const dirName = e.currentTarget.dataset.name;
+      const wasSearch = state.mainMode === 'search';
 
+      state.mainMode = 'dir';
       state.pdir_fid = fid;
-      state.breadcrumbs.push({ fid, name: dirName });
+      if (wasSearch) {
+        state.breadcrumbs = [
+          { fid: '0', name: '全部文件' },
+          { fid, name: dirName }
+        ];
+        if (state.searchScope === 'local') {
+          state.searchKeyword = '';
+          const kwInput = document.getElementById('qrKeywordInput');
+          if (kwInput) kwInput.value = '';
+        }
+      } else {
+        state.breadcrumbs.push({ fid, name: dirName });
+      }
 
       const fidInput = document.getElementById('qrFidInput');
       if (fidInput) fidInput.value = state.pdir_fid;
@@ -741,16 +845,38 @@ export function updateStatText() {
   const visibleFiles = state.fileList.filter((f) => f.visible);
   const selectedFiles = visibleFiles.filter((f) => f.selected);
   const totalSelected = selectedFiles.length;
+  const filesOnlySelected = selectedFiles.filter((f) => !f.is_dir).length;
   const renameSelected = selectedFiles.filter((f) => f.new_name !== f.file_name).length;
 
   const statEl = document.getElementById('qrStatText');
   if (statEl) {
-    statEl.textContent = `已勾选: ${totalSelected} 项 (待改名 ${renameSelected} 项)`;
+    statEl.textContent = `已勾选: ${totalSelected} 项 (改名 ${renameSelected})`;
+  }
+
+  const moveBtn = document.getElementById('qrMoveBtn');
+  if (moveBtn) {
+    moveBtn.innerHTML = `${ICONS.move} 批量移动 (${totalSelected})`;
   }
 
   const deleteBtn = document.getElementById('qrDeleteBtn');
   if (deleteBtn) {
-    deleteBtn.innerHTML = `${ICONS.trash} 批量删除选中 (${totalSelected})`;
+    deleteBtn.innerHTML = `${ICONS.trash} 批量删除 (${totalSelected})`;
+  }
+
+  const batchShareBtn = document.getElementById('qrBatchShareBtn');
+  if (batchShareBtn) {
+    batchShareBtn.innerHTML = totalSelected > 0 ? `${ICONS.share} 分享 (${totalSelected})` : `${ICONS.share} 创建分享`;
+  }
+
+  const dlBtn = document.getElementById('qrDownloadLinksBtn');
+  if (dlBtn) {
+    dlBtn.innerHTML = filesOnlySelected > 0 ? `${ICONS.download} 直链 (${filesOnlySelected})` : `${ICONS.download} 提取直链`;
+  }
+
+  const selectAllCb = document.getElementById('qrSelectAll');
+  if (selectAllCb) {
+    selectAllCb.checked = visibleFiles.length > 0 && totalSelected === visibleFiles.length;
+    selectAllCb.indeterminate = totalSelected > 0 && totalSelected < visibleFiles.length;
   }
 }
 
@@ -758,6 +884,7 @@ export function openModal() {
   parseUrlAndSyncState();
   const overlay = document.getElementById('qrModalOverlay');
   overlay.classList.add('active');
+  refreshAccountQuotaUI(true);
   if ((window.location.hash || '').includes('/list/myshare')) {
     switchPageView('shares');
     if (state.shares.list.length === 0) {
@@ -813,6 +940,8 @@ export function bindEvents() {
   const closeBtn = document.getElementById('qrCloseBtn');
   const refreshBtn = document.getElementById('qrRefreshBtn');
   const fetchSelectedBtn = document.getElementById('qrFetchSelectedBtn');
+  const batchShareBtn = document.getElementById('qrBatchShareBtn');
+  const downloadLinksBtn = document.getElementById('qrDownloadLinksBtn');
   const historyBtn = document.getElementById('qrHistoryBtn');
   const exportCsvBtnPage = document.getElementById('qrExportCsvBtnPage');
   const importCsvBtnPage = document.getElementById('qrImportCsvBtnPage');
@@ -821,11 +950,43 @@ export function bindEvents() {
   const includeSubDirsCb = document.getElementById('qrIncludeSubDirs');
   const selectAllCb = document.getElementById('qrSelectAll');
   const startBtn = document.getElementById('qrStartBtn');
+  const accountPill = document.getElementById('qrAccountPill');
+  const kwInput = document.getElementById('qrKeywordInput');
+  const cloudSearchBtn = document.getElementById('qrCloudSearchBtn');
+
+  async function triggerCloudSearch() {
+    const q = kwInput ? kwInput.value.trim() : '';
+    if (!q) {
+      toast('请输入全盘搜索关键词', 'info');
+      if (kwInput) kwInput.focus();
+      return;
+    }
+    state.mainMode = 'search';
+    state.searchQuery = q;
+    renderBreadcrumbs();
+    await searchDriveFiles(q);
+    renderBreadcrumbs();
+  }
 
   closeBtn.addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeModal();
   });
+
+  if (accountPill) {
+    accountPill.addEventListener('click', async () => {
+      await refreshAccountQuotaUI(true);
+      if (state.account.loggedIn) {
+        toast('已刷新账号与网盘容量');
+      }
+    });
+    accountPill.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        accountPill.click();
+      }
+    });
+  }
 
   document.querySelectorAll('.qr-nav-item[data-view]').forEach((navBtn) => {
     navBtn.addEventListener('click', (e) => {
@@ -847,7 +1008,8 @@ export function bindEvents() {
   });
 
   fidInput.addEventListener('change', (e) => {
-    state.pdir_fid = e.target.value.trim();
+    state.mainMode = 'dir';
+    state.pdir_fid = e.target.value.trim() || '0';
     state.breadcrumbs = [{ fid: state.pdir_fid, name: `FID:${state.pdir_fid}` }];
     renderBreadcrumbs();
   });
@@ -857,7 +1019,9 @@ export function bindEvents() {
   });
 
   refreshBtn.addEventListener('click', () => {
+    state.mainMode = 'dir';
     state.pdir_fid = fidInput.value.trim() || '0';
+    renderBreadcrumbs();
     fetchFileList();
   });
 
@@ -867,6 +1031,44 @@ export function bindEvents() {
   fetchSelectedBtn.addEventListener('click', () => {
     fetchWebPageSelectedFiles();
   });
+
+  if (batchShareBtn) {
+    batchShareBtn.addEventListener('click', () => {
+      const selected = state.fileList.filter((f) => f.visible && f.selected);
+      openCreateShareModal(selected, { onSharesCreated: prependCreatedShares });
+    });
+  }
+
+  if (downloadLinksBtn) {
+    downloadLinksBtn.addEventListener('click', runExtractDownloadLinks);
+  }
+
+  document.querySelectorAll('#qrSearchScopeGroup .qr-seg-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const scope = btn.dataset.scope === 'cloud' ? 'cloud' : 'local';
+      state.searchScope = scope;
+      document.querySelectorAll('#qrSearchScopeGroup .qr-seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      if (cloudSearchBtn) cloudSearchBtn.classList.toggle('hidden', scope !== 'cloud');
+      if (kwInput) {
+        kwInput.placeholder = scope === 'cloud' ? '全盘搜索 + 回车...' : '过滤文件名...';
+      }
+      updateConfigFromUI();
+      if (kwInput) kwInput.focus();
+    });
+  });
+
+  if (cloudSearchBtn) {
+    cloudSearchBtn.addEventListener('click', triggerCloudSearch);
+  }
+
+  if (kwInput) {
+    kwInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && state.searchScope === 'cloud') {
+        e.preventDefault();
+        triggerCloudSearch();
+      }
+    });
+  }
 
   document.querySelectorAll('.qr-tab-btn[data-tab]').forEach((tabBtn) => {
     tabBtn.addEventListener('click', (e) => {
@@ -934,9 +1136,9 @@ export function bindEvents() {
   // 初始化手写自定义 Select 下拉框组件
   bindCustomSelects();
 
-  document.querySelectorAll('#viewMain .qr-chip').forEach((chip) => {
+  document.querySelectorAll('#viewMain .qr-type-filters .qr-chip').forEach((chip) => {
     chip.addEventListener('click', (e) => {
-      document.querySelectorAll('#viewMain .qr-chip').forEach((c) => c.classList.remove('active'));
+      document.querySelectorAll('#viewMain .qr-type-filters .qr-chip').forEach((c) => c.classList.remove('active'));
       e.currentTarget.classList.add('active');
       state.filterType = e.currentTarget.dataset.type;
       recalculateNewNames();
@@ -953,6 +1155,11 @@ export function bindEvents() {
 
   startBtn.addEventListener('click', runBatchRename);
 
+  const moveBtn = document.getElementById('qrMoveBtn');
+  if (moveBtn) {
+    moveBtn.addEventListener('click', runBatchMove);
+  }
+
   const deleteBtn = document.getElementById('qrDeleteBtn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', runBatchDelete);
@@ -966,6 +1173,14 @@ export function bindEvents() {
     if (req.action === 'TOGGLE_RENAME_PANEL') {
       openModal();
       sendResponse({ success: true });
+    }
+  });
+
+  window.addEventListener('qr-account-updated', (e) => {
+    refreshAccountQuotaUI(false);
+    const destFid = e?.detail?.destinationFid;
+    if (destFid && state.mainMode === 'dir' && String(destFid) === String(state.pdir_fid) && state.currentView === 'main') {
+      fetchFileList();
     }
   });
 }

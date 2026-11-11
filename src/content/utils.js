@@ -77,16 +77,53 @@ export function parseCsvLine(line) {
 
 export function friendlyErrorMessage(res) {
   if (!res) return '操作失败';
-  const code = res.code;
+  const code = Number(res.code);
   const message = res.message || res.error || '';
   const text = String(message).toLowerCase();
 
+  if (code === 32003 || code === 32004 || text.includes('capacity') || text.includes('空间不足')) {
+    return `网盘剩余空间不足 (${code || 'quota'})：请清理空间或扩容后再试`;
+  }
+  if (code === 41007 || text.includes('share not exist')) {
+    return '分享链接不存在、已过期或已被取消';
+  }
+  if (code === 41008 || code === 41004 || text.includes('stoken invalid') || text.includes('passcode')) {
+    return '提取码错误或分享访问凭证 (stoken) 已过期';
+  }
   if (code === 23008 || text.includes('同名') || text.includes('冲突') || text.includes('doloading')) {
     return '名称冲突：该文件夹/文件名称已存在，请更换名称后重试';
   }
-  if (code === -1) return '网络或代理请求异常，请稍后重试';
+  if (code === -1) return message || '网络或代理请求异常，请稍后重试';
 
   return message || '操作失败';
+}
+
+export async function copyTextToClipboard(text) {
+  if (!text) return false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (err) {
+    console.warn('[Quark Assistant] Clipboard API 失败，尝试降级复制:', err);
+  }
+
+  try {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.left = '-9999px';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const ok = document.execCommand('copy');
+    textarea.remove();
+    return ok;
+  } catch (err) {
+    console.warn('[Quark Assistant] 降级复制失败:', err);
+    return false;
+  }
 }
 
 export function formatSize(bytes) {

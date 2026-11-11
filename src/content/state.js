@@ -5,6 +5,10 @@
 export const state = {
   pdir_fid: '0',
   breadcrumbs: [{ fid: '0', name: '全部文件' }],
+  mainMode: 'dir', // 'dir' 目录浏览 | 'search' 全盘搜索
+  searchScope: 'local', // 'local' 当前过滤 | 'cloud' 全盘检索
+  searchQuery: '',
+  searchTotal: 0,
   includeSubDirs: false,
   fileList: [],
   activeTab: 'replace',
@@ -15,6 +19,16 @@ export const state = {
   delayMs: 500,
   isRunning: false,
   fetchSeq: 0,
+  account: {
+    loading: false,
+    loaded: false,
+    loggedIn: false,
+    nickname: '',
+    member_type: 'NORMAL',
+    use_capacity: 0,
+    total_capacity: 0,
+    exp_at: 0
+  },
   config: {
     replaceSearch: '',
     replaceTarget: '',

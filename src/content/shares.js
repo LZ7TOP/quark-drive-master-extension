@@ -4,9 +4,19 @@
 
 import { state } from './state.js';
 import { ICONS } from './constants.js';
-import { escapeHtml, formatSize, formatTimestamp, log, parseCsvLine, sanitizeHttpUrl } from './utils.js';
-import { requestMySharesPage } from './api.js';
-import { customAlert, toast } from './dialogs.js';
+import {
+  copyTextToClipboard,
+  escapeHtml,
+  formatSize,
+  formatTimestamp,
+  friendlyErrorMessage,
+  log,
+  parseCsvLine,
+  sanitizeHttpUrl
+} from './utils.js';
+import { isQuarkOk, requestDeleteShares, requestMySharesPage } from './api.js';
+import { customAlert, customConfirm, toast } from './dialogs.js';
+import { mountShareInnerBrowser, openBatchSaveAsModal } from './share-actions.js';
 
 const SHARE_CACHE_KEY = 'quark_shares_cache_v1';
 const TEXT_COLLATOR = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' });
@@ -549,34 +559,6 @@ function restoreSharesCacheIfEmpty() {
   }
 }
 
-async function copyTextToClipboard(text) {
-  if (!text) return false;
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    }
-  } catch (err) {
-    console.warn('[Quark Shares] Clipboard API 失败，尝试降级复制:', err);
-  }
-
-  try {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.setAttribute('readonly', '');
-    textarea.style.position = 'fixed';
-    textarea.style.left = '-9999px';
-    document.body.appendChild(textarea);
-    textarea.select();
-    const ok = document.execCommand('copy');
-    textarea.remove();
-    return ok;
-  } catch (err) {
-    console.warn('[Quark Shares] 降级复制失败:', err);
-    return false;
-  }
-}
-
 function formatShareLinkText(item, withTitle = true) {
   const url = item.share_url || '';
   const codePart = item.passcode ? ` 提取码: ${item.passcode}` : '';
@@ -584,6 +566,30 @@ function formatShareLinkText(item, withTitle = true) {
     return `${url}${codePart}`.trim();
   }
   return `${item.title}\n链接: ${url}${codePart}`.trim();
+}
+
+function formatSingleLineShareText(item) {
+  const url = item.share_url || '';
+  if (!url) return '';
+  const codePart = item.passcode ? ` 提取码: ${item.passcode}` : '';
+  const titlePart = item.title ? `${item.title} ` : '';
+  return `${titlePart}${url}${codePart}`.trim();
+}
+
+export function prependCreatedShares(rawItems) {
+  if (!Array.isArray(rawItems) || rawItems.length === 0) return;
+  const incoming = rawItems.map((it, idx) => normalizeShareItem(it, idx));
+  const merged = deduplicateShareItems([...incoming, ...state.shares.list]);
+  state.shares.list = merged;
+  if (state.shares.source === 'none') {
+    state.shares.source = 'online';
+  }
+  state.shares.sourceLabel = `${state.shares.source === 'import' ? '本地导入' : '在线实时'} · ${merged.length} 项`;
+  state.shares.updatedAt = Date.now();
+  saveSharesCache(merged, state.shares.source, state.shares.sourceLabel);
+  if (document.getElementById('qrShareTableBody')) {
+    renderSharesAll();
+  }
 }
 
 export async function fetchAllMyShares() {
@@ -660,7 +666,7 @@ export async function fetchAllMyShares() {
       state.shares.isLoading = false;
       if (fetchBtn) {
         fetchBtn.disabled = false;
-        fetchBtn.innerHTML = `${ICONS.refresh} 一键拉取分享`;
+        fetchBtn.innerHTML = `${ICONS.refresh} 一键拉取`;
       }
     }
   }
@@ -707,7 +713,7 @@ export function importSharesFromFile(file) {
 }
 
 function openPasteImportModal() {
-  document.querySelectorAll('.qr-dialog-overlay').forEach((d) => d.remove());
+  document.querySelectorAll('.qr-dialog-overlay:not(.qr-system-dialog-overlay)').forEach((d) => d.remove());
 
   const dialog = document.createElement('div');
   dialog.className = 'qr-dialog-overlay';
@@ -739,7 +745,7 @@ function openPasteImportModal() {
     dialog.remove();
   };
   const onEsc = (e) => {
-    if (e.key === 'Escape') closeDialog();
+    if (e.key === 'Escape' && !document.querySelector('.qr-system-dialog-overlay')) closeDialog();
   };
   document.addEventListener('keydown', onEsc);
   dialog.querySelectorAll('.qr-dialog-close').forEach((btn) => btn.addEventListener('click', closeDialog));
@@ -915,9 +921,135 @@ async function copySelectedShares() {
   }
 }
 
+function selectInvalidOrViolationShares() {
+  if (state.shares.list.length === 0) {
+    customAlert('提示', '请先拉取或导入分享列表。');
+    return;
+  }
+
+  const targetKeys = state.shares.filterStatus === 'partial_violation' ? ['partial_violation'] : ['expired', 'failed', 'violation'];
+  const visible = getFilteredShares();
+  let matched = visible.filter((it) => targetKeys.includes(it.statusInfo?.key));
+
+  if (matched.length === 0 && (state.shares.filterStatus !== 'all' || state.shares.filterPath !== 'all')) {
+    const allMatched = state.shares.list.filter((it) => ['expired', 'failed', 'violation'].includes(it.statusInfo?.key));
+    if (allMatched.length > 0) {
+      state.shares.filterStatus = 'all';
+      state.shares.filterPath = 'all';
+      allMatched.forEach((it) => {
+        it.selected = true;
+      });
+      renderSharesAll();
+      toast(`已切换到全部视图并勾选 ${allMatched.length} 条失效/违规分享`);
+      return;
+    }
+  }
+
+  if (matched.length === 0) {
+    const partialCount = state.shares.list.filter((it) => it.statusInfo?.key === 'partial_violation').length;
+    if (partialCount > 0) {
+      toast(`未发现全包失效/违规记录（另有 ${partialCount} 条「部分违规」可点击筛选单独检查）`, 'info');
+    } else {
+      toast('当前列表中未发现过期、失败或违规分享记录', 'info');
+    }
+    return;
+  }
+
+  matched.forEach((it) => {
+    it.selected = true;
+  });
+  renderShareTable();
+  toast(`已自动勾选 ${matched.length} 条失效/违规分享`);
+}
+
+function openBatchSaveFromSharesView() {
+  const visible = getFilteredShares();
+  const checked = visible.filter((it) => it.selected && it.share_url);
+  const initialLinksText = checked.map(formatSingleLineShareText).filter(Boolean).join('\n');
+  openBatchSaveAsModal({ initialLinksText });
+}
+
+function runBatchCancelShares() {
+  if (state.isRunning || state.shares.isLoading) {
+    customAlert('提示', '当前已有操作或拉取任务正在执行，请稍候。');
+    return;
+  }
+
+  const visible = getFilteredShares();
+  const selected = visible.filter((it) => it.selected);
+  if (selected.length === 0) {
+    customAlert('提示', '请先勾选需要取消的分享记录（也可点击「勾选失效/违规」快速选中过期与违规分享）。');
+    return;
+  }
+
+  const cancelable = selected.filter((it) => Boolean(it.share_id));
+  const skippedCount = selected.length - cancelable.length;
+  if (cancelable.length === 0) {
+    customAlert(
+      '缺少 share_id',
+      '所选分享记录缺少官方 share_id（通常为纯文本链接导入），请点击「一键拉取分享」同步线上列表后再执行取消操作。'
+    );
+    return;
+  }
+
+  const skippedHint = skippedCount > 0 ? `\n（注意：其中 ${skippedCount} 条缺少 share_id 的文本导入项将被跳过）` : '';
+  customConfirm(
+    '确认批量取消分享',
+    `⚠️ 确认永久取消已选中的 ${cancelable.length} 条分享链接吗？\n取消后外链将立即失效，网盘内的原文件不会被删除。${skippedHint}`,
+    async (confirmed) => {
+      if (!confirmed) return;
+
+      state.isRunning = true;
+      const cancelBtn = document.getElementById('qrShareCancelBtn');
+      if (cancelBtn) {
+        cancelBtn.disabled = true;
+        cancelBtn.innerHTML = `${ICONS.refresh} 取消中...`;
+      }
+
+      const shareIds = cancelable.map((it) => it.share_id);
+      const removedIds = new Set();
+      const CHUNK_SIZE = 50;
+
+      try {
+        for (let i = 0; i < shareIds.length; i += CHUNK_SIZE) {
+          const chunk = shareIds.slice(i, i + CHUNK_SIZE);
+          const res = await requestDeleteShares(chunk);
+          if (!isQuarkOk(res)) {
+            throw new Error(friendlyErrorMessage(res));
+          }
+          chunk.forEach((id) => removedIds.add(id));
+          if (i + CHUNK_SIZE < shareIds.length) {
+            await new Promise((r) => setTimeout(r, 250));
+          }
+        }
+
+        state.shares.list = state.shares.list.filter((it) => !removedIds.has(it.share_id));
+        state.shares.sourceLabel = `${state.shares.source === 'import' ? '本地导入' : '在线实时'} · ${state.shares.list.length} 项`;
+        saveSharesCache(state.shares.list, state.shares.source, state.shares.sourceLabel);
+        renderSharesAll();
+        log(`批量取消分享完成: 已永久关闭 ${removedIds.size} 条分享链接`);
+        toast(`已取消 ${removedIds.size} 条分享链接`);
+      } catch (err) {
+        if (removedIds.size > 0) {
+          state.shares.list = state.shares.list.filter((it) => !removedIds.has(it.share_id));
+          saveSharesCache(state.shares.list, state.shares.source, state.shares.sourceLabel);
+          renderSharesAll();
+        }
+        const msg = err.message || '取消分享失败';
+        log(`取消分享失败: ${msg}`);
+        customAlert('取消分享失败', removedIds.size > 0 ? `已取消 ${removedIds.size} 条，后续批次失败：${msg}` : msg);
+      } finally {
+        state.isRunning = false;
+        if (cancelBtn) cancelBtn.disabled = false;
+        updateShareActionLabels();
+      }
+    }
+  );
+}
+
 function openShareDetailModal(item) {
   if (!item) return;
-  document.querySelectorAll('.qr-dialog-overlay').forEach((d) => d.remove());
+  document.querySelectorAll('.qr-dialog-overlay:not(.qr-system-dialog-overlay)').forEach((d) => d.remove());
 
   const safeHref = sanitizeHttpUrl(item.share_url);
   const st = item.statusInfo || resolveShareStatus(item);
@@ -929,7 +1061,7 @@ function openShareDetailModal(item) {
   dialog.innerHTML = `
     <div class="qr-dialog-box qr-share-detail-box">
       <div class="qr-dialog-title qr-history-dialog-title">
-        <span class="qr-title-text">${ICONS.eye} 分享详情可视化</span>
+        <span class="qr-title-text">${ICONS.eye} 分享详情与包内文件浏览器</span>
         <button type="button" class="qr-close-btn qr-dialog-close" aria-label="关闭">&times;</button>
       </div>
       <div class="qr-dialog-content qr-share-detail-body">
@@ -942,39 +1074,51 @@ function openShareDetailModal(item) {
           </div>
         </div>
 
-        <div class="qr-share-detail-link-row">
-          <span class="qr-share-detail-label">分享链接</span>
-          <div class="qr-share-detail-link-val">
-            ${
-              safeHref
-                ? `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" class="qr-author-link">${escapeHtml(safeHref)}</a>`
-                : '<span style="color:#71717a;">无链接</span>'
-            }
-            ${item.passcode ? `<span class="qr-share-pwd-pill">提取码: ${escapeHtml(item.passcode)}</span>` : ''}
+        <div class="qr-tabs qr-detail-tabs">
+          <button type="button" class="qr-tab-btn active" data-detail-tab="overview">概览与统计指标</button>
+          <button type="button" class="qr-tab-btn" data-detail-tab="files">${ICONS.folder} 包内文件浏览 &amp; 搜索</button>
+        </div>
+
+        <div id="qrDetailOverviewPane" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="qr-share-detail-link-row">
+            <span class="qr-share-detail-label">分享链接</span>
+            <div class="qr-share-detail-link-val">
+              ${
+                safeHref
+                  ? `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" class="qr-author-link">${escapeHtml(safeHref)}</a>`
+                  : '<span style="color:#71717a;">无链接</span>'
+              }
+              ${item.passcode ? `<span class="qr-share-pwd-pill">提取码: ${escapeHtml(item.passcode)}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="qr-share-detail-kpis">
+            <div class="qr-stat-item"><span class="qr-stat-value">${formatSize(item.size)}</span><span class="qr-stat-label">分享总体积</span></div>
+            <div class="qr-stat-item"><span class="qr-stat-value">${item.file_only_num} / ${item.all_file_num}</span><span class="qr-stat-label">文件数 / 含目录</span></div>
+            <div class="qr-stat-item"><span class="qr-stat-value">${item.save_pv}</span><span class="qr-stat-label">转存次数</span></div>
+            <div class="qr-stat-item"><span class="qr-stat-value">${item.download_pv}</span><span class="qr-stat-label">下载次数</span></div>
+          </div>
+
+          <div class="qr-share-detail-meta">
+            <div><span>来源路径：</span><b>${escapeHtml(item.path_label)}</b></div>
+            <div><span>源文件名：</span><b>${escapeHtml(item.first_file_name || item.title)}</b></div>
+            <div><span>创建时间：</span><b>${escapeHtml(formatTimestamp(item.created_at))}</b></div>
+            <div><span>更新时间：</span><b>${escapeHtml(formatTimestamp(item.updated_at))}</b></div>
+            <div><span>有效期至：</span><b>${escapeHtml(expireText)}</b></div>
+            <div><span>浏览/访客：</span><b>${escapeHtml(clickText)} / ${item.visit_user_count} 人</b></div>
+            <div><span>图片/视频：</span><b>${item.pic_total} 图 / ${item.video_total} 视频</b></div>
+            <div><span>Share ID：</span><b style="font-family:monospace;">${escapeHtml(item.share_id || '-')}</b></div>
+            <div><span>First FID：</span><b style="font-family:monospace;">${escapeHtml(item.first_fid || '-')}</b></div>
           </div>
         </div>
 
-        <div class="qr-share-detail-kpis">
-          <div class="qr-stat-item"><span class="qr-stat-value">${formatSize(item.size)}</span><span class="qr-stat-label">分享总体积</span></div>
-          <div class="qr-stat-item"><span class="qr-stat-value">${item.file_only_num} / ${item.all_file_num}</span><span class="qr-stat-label">文件数 / 含目录</span></div>
-          <div class="qr-stat-item"><span class="qr-stat-value">${item.save_pv}</span><span class="qr-stat-label">转存次数</span></div>
-          <div class="qr-stat-item"><span class="qr-stat-value">${item.download_pv}</span><span class="qr-stat-label">下载次数</span></div>
-        </div>
-
-        <div class="qr-share-detail-meta">
-          <div><span>来源路径：</span><b>${escapeHtml(item.path_label)}</b></div>
-          <div><span>源文件名：</span><b>${escapeHtml(item.first_file_name || item.title)}</b></div>
-          <div><span>创建时间：</span><b>${escapeHtml(formatTimestamp(item.created_at))}</b></div>
-          <div><span>更新时间：</span><b>${escapeHtml(formatTimestamp(item.updated_at))}</b></div>
-          <div><span>有效期至：</span><b>${escapeHtml(expireText)}</b></div>
-          <div><span>浏览/访客：</span><b>${escapeHtml(clickText)} / ${item.visit_user_count} 人</b></div>
-          <div><span>图片/视频：</span><b>${item.pic_total} 图 / ${item.video_total} 视频</b></div>
-          <div><span>Share ID：</span><b style="font-family:monospace;">${escapeHtml(item.share_id || '-')}</b></div>
-          <div><span>First FID：</span><b style="font-family:monospace;">${escapeHtml(item.first_fid || '-')}</b></div>
-        </div>
+        <div id="qrDetailBrowserPane" class="hidden"></div>
       </div>
       <div class="qr-dialog-actions" style="justify-content: space-between;">
-        <button type="button" id="qrDetailCopyBtn" class="qr-btn-tool qr-btn-purple">${ICONS.copy} 复制分享文案</button>
+        <div style="display:flex; gap:8px;">
+          <button type="button" id="qrDetailCopyBtn" class="qr-btn-tool qr-btn-purple">${ICONS.copy} 复制分享文案</button>
+          <button type="button" id="qrDetailSaveAsBtn" class="qr-btn-tool qr-btn-green">${ICONS.download} 转存此分享</button>
+        </div>
         <div style="display:flex; gap:8px;">
           ${
             safeHref
@@ -993,7 +1137,9 @@ function openShareDetailModal(item) {
     dialog.remove();
   };
   const onEsc = (e) => {
-    if (e.key === 'Escape') closeDialog();
+    if (e.key === 'Escape' && !document.querySelector('.qr-subdialog-overlay') && !document.querySelector('.qr-system-dialog-overlay')) {
+      closeDialog();
+    }
   };
   document.addEventListener('keydown', onEsc);
   dialog.querySelectorAll('.qr-dialog-close').forEach((btn) => btn.addEventListener('click', closeDialog));
@@ -1001,11 +1147,41 @@ function openShareDetailModal(item) {
     if (e.target === dialog) closeDialog();
   });
 
+  const overviewPane = dialog.querySelector('#qrDetailOverviewPane');
+  const browserPane = dialog.querySelector('#qrDetailBrowserPane');
+  const browserCtrl = mountShareInnerBrowser(browserPane, item, {
+    onSaveSelected: (directEntries) => openBatchSaveAsModal({ directEntries })
+  });
+
+  dialog.querySelectorAll('.qr-detail-tabs .qr-tab-btn').forEach((tabBtn) => {
+    tabBtn.addEventListener('click', () => {
+      const targetTab = tabBtn.dataset.detailTab;
+      dialog.querySelectorAll('.qr-detail-tabs .qr-tab-btn').forEach((b) => b.classList.toggle('active', b === tabBtn));
+      if (overviewPane) overviewPane.classList.toggle('hidden', targetTab !== 'overview');
+      if (browserPane) browserPane.classList.toggle('hidden', targetTab !== 'files');
+      if (targetTab === 'files' && browserCtrl) {
+        browserCtrl.ensureLoaded();
+      }
+    });
+  });
+
   const copyBtn = dialog.querySelector('#qrDetailCopyBtn');
   if (copyBtn) {
     copyBtn.addEventListener('click', async () => {
       const ok = await copyTextToClipboard(formatShareLinkText(item, true));
       if (ok) toast('已复制该分享完整文案');
+    });
+  }
+
+  const saveAsBtn = dialog.querySelector('#qrDetailSaveAsBtn');
+  if (saveAsBtn) {
+    saveAsBtn.addEventListener('click', () => {
+      const linkLine = formatSingleLineShareText(item);
+      if (!linkLine) {
+        customAlert('提示', '该分享缺少有效链接，无法发起转存。');
+        return;
+      }
+      openBatchSaveAsModal({ initialLinksText: linkLine });
     });
   }
 }
@@ -1133,6 +1309,7 @@ function renderShareFilterChips() {
 function updateShareActionLabels() {
   const visible = getFilteredShares();
   const checkedCount = visible.filter((it) => it.selected).length;
+  const cancelableCount = visible.filter((it) => it.selected && Boolean(it.share_id)).length;
 
   const sourceBadge = document.getElementById('qrShareSourceBadge');
   if (sourceBadge) {
@@ -1142,6 +1319,16 @@ function updateShareActionLabels() {
   const copyBtn = document.getElementById('qrShareCopyBtn');
   if (copyBtn) {
     copyBtn.innerHTML = checkedCount > 0 ? `${ICONS.copy} 复制选中 (${checkedCount})` : `${ICONS.copy} 复制全部 (${visible.length})`;
+  }
+
+  const batchSaveBtn = document.getElementById('qrShareBatchSaveBtn');
+  if (batchSaveBtn) {
+    batchSaveBtn.innerHTML = checkedCount > 0 ? `${ICONS.download} 转存选中 (${checkedCount})` : `${ICONS.download} 批量转存`;
+  }
+
+  const cancelBtn = document.getElementById('qrShareCancelBtn');
+  if (cancelBtn) {
+    cancelBtn.innerHTML = `${ICONS.trash} 取消分享 (${cancelableCount})`;
   }
 
   const selectAllCb = document.getElementById('qrShareSelectAll');
@@ -1348,11 +1535,13 @@ export function renderSharesViewComponent() {
         <span id="qrShareSourceBadge" class="qr-share-source-text">${escapeHtml(state.shares.sourceLabel)}</span>
       </div>
       <div class="qr-share-toolbar-actions">
-        <button type="button" id="qrShareFetchBtn" class="qr-btn-tool qr-btn-blue" title="在线分页拉取当前账号全部我的分享">${ICONS.refresh} 一键拉取分享</button>
+        <button type="button" id="qrShareFetchBtn" class="qr-btn-tool qr-btn-blue" title="在线分页拉取当前账号全部我的分享">${ICONS.refresh} 一键拉取</button>
+        <button type="button" id="qrShareBatchSaveBtn" class="qr-btn-tool qr-btn-green" title="批量链式转存多条夸克分享链接">${ICONS.download} 批量转存</button>
+        <button type="button" id="qrShareCancelBtn" class="qr-btn-tool qr-btn-red" title="批量永久取消勾选的分享链接（不删除网盘原文件）">${ICONS.trash} 取消分享 (0)</button>
         <button type="button" id="qrShareImportBtn" class="qr-btn-tool qr-btn-green" title="导入 JSON / CSV 或浏览器抓包文本（如请求.txt）">${ICONS.upload} 导入清单</button>
         <button type="button" id="qrSharePasteBtn" class="qr-btn-tool qr-btn-blue" title="直接粘贴抓包 JSON、CSV 或分享链接文本导入">${ICONS.paste} 粘贴导入</button>
-        <button type="button" id="qrShareExportCsvBtn" class="qr-btn-tool qr-btn-amber" title="导出分享清单为 CSV 表格">${ICONS.download} 导出 CSV</button>
-        <button type="button" id="qrShareExportJsonBtn" class="qr-btn-tool qr-btn-amber" title="导出分享完整数据为 JSON">${ICONS.download} 导出 JSON</button>
+        <button type="button" id="qrShareExportCsvBtn" class="qr-btn-tool qr-btn-amber" title="导出分享清单为 CSV 表格">${ICONS.download} CSV</button>
+        <button type="button" id="qrShareExportJsonBtn" class="qr-btn-tool qr-btn-amber" title="导出分享完整数据为 JSON">${ICONS.download} JSON</button>
         <button type="button" id="qrShareCopyBtn" class="qr-btn-tool qr-btn-purple" title="批量复制分享标题、链接与提取码">${ICONS.copy} 复制全部 (0)</button>
       </div>
     </div>
@@ -1362,7 +1551,8 @@ export function renderSharesViewComponent() {
     <div class="qr-filter-bar qr-share-filter-bar">
       <div id="qrShareFilterChips" class="qr-type-filters"></div>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <input type="text" id="qrShareKeywordInput" class="qr-input" placeholder="搜索标题 / 链接 / 目录..." style="padding: 2px 8px; font-size: 11px; width: 170px; height: 26px;">
+        <button type="button" id="qrShareSelectInvalidBtn" class="qr-btn-tool qr-btn-amber" style="height: 26px; padding: 0 8px; font-size: 11px;" title="一键勾选已过期、失败或全包违规的分享记录">${ICONS.warn} 勾选失效/违规</button>
+        <input type="text" id="qrShareKeywordInput" class="qr-input" placeholder="搜索标题 / 链接 / 目录..." style="padding: 2px 8px; font-size: 11px; width: 160px; height: 26px;">
       </div>
     </div>
 
@@ -1412,6 +1602,9 @@ export function renderSharesViewComponent() {
 
 export function bindSharesEvents() {
   const fetchBtn = document.getElementById('qrShareFetchBtn');
+  const batchSaveBtn = document.getElementById('qrShareBatchSaveBtn');
+  const cancelBtn = document.getElementById('qrShareCancelBtn');
+  const selectInvalidBtn = document.getElementById('qrShareSelectInvalidBtn');
   const importBtn = document.getElementById('qrShareImportBtn');
   const fileInput = document.getElementById('qrShareFileInput');
   const pasteBtn = document.getElementById('qrSharePasteBtn');
@@ -1423,6 +1616,9 @@ export function bindSharesEvents() {
   const table = document.getElementById('qrShareTable');
 
   if (fetchBtn) fetchBtn.addEventListener('click', fetchAllMyShares);
+  if (batchSaveBtn) batchSaveBtn.addEventListener('click', openBatchSaveFromSharesView);
+  if (cancelBtn) cancelBtn.addEventListener('click', runBatchCancelShares);
+  if (selectInvalidBtn) selectInvalidBtn.addEventListener('click', selectInvalidOrViolationShares);
   if (importBtn && fileInput) {
     importBtn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {

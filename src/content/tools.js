@@ -218,6 +218,11 @@ async function scanFlattenSubdirs() {
   const scanBtn = document.getElementById('qrScanFlattenBtn');
   if (!resultEl) return;
 
+  if (state.mainMode === 'search') {
+    customAlert('提示', '当前主面板处于「全盘搜索」结果视图，请先返回具体文件夹后，再扫描提取子目录内容。');
+    return;
+  }
+
   const currentFid = state.pdir_fid || '0';
   resultEl.innerHTML = `<div class="qr-tool-tip">🔍 正在深度扫描子目录及包含的文件 (FID: ${escapeHtml(currentFid)})...</div>`;
   if (scanBtn) scanBtn.disabled = true;

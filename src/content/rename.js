@@ -38,7 +38,8 @@ export function updateConfigFromUI() {
   state.config.cleanBracket = document.getElementById('qrCleanBracket').checked;
   state.config.cleanTrad = document.getElementById('qrCleanTrad').checked;
 
-  state.searchKeyword = document.getElementById('qrKeywordInput').value.trim().toLowerCase();
+  const kwInputEl = document.getElementById('qrKeywordInput');
+  state.searchKeyword = state.searchScope === 'local' && kwInputEl ? kwInputEl.value.trim().toLowerCase() : '';
 
   recalculateNewNames();
 }
@@ -57,7 +58,7 @@ export function recalculateNewNames() {
     if (state.filterType === 'image' && !/\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file.file_name)) visible = false;
     if (state.filterType === 'doc' && !/\.(pdf|docx?|xlsx?|pptx?|txt|md)$/i.test(file.file_name)) visible = false;
 
-    if (state.searchKeyword && !file.file_name.toLowerCase().includes(state.searchKeyword)) {
+    if (state.searchScope === 'local' && state.searchKeyword && !file.file_name.toLowerCase().includes(state.searchKeyword)) {
       visible = false;
     }
 

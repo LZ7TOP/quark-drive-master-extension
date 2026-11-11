@@ -1,4 +1,4 @@
-/* 夸克网盘全能管理工具 - Content CSS (v3.0.0 整合全能版) */
+/* 夸克网盘全能管理工具 - Content CSS */
 
 .qr-icon {
   width: 14px;
@@ -113,13 +113,14 @@
 .qr-header-bottom {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
-/* 多页面主导航 Tabs (第二排独占) */
+/* 多页面主导航 Tabs (第二排左侧) */
 .qr-page-nav {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   background: #09090b;
   padding: 3px;
   border-radius: 6px;
@@ -127,7 +128,7 @@
 }
 
 .qr-nav-item {
-  padding: 5px 14px;
+  padding: 5px 10px;
   background: transparent;
   border: none;
   color: #a1a1aa;
@@ -139,7 +140,7 @@
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .qr-nav-item:hover {
@@ -672,7 +673,7 @@
 }
 
 .qr-btn-primary {
-  padding: 7px 18px;
+  padding: 7px 14px;
   background: #2563eb;
   color: #ffffff;
   border: none;
@@ -683,11 +684,22 @@
   transition: background 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  white-space: nowrap;
 }
 
 .qr-btn-primary:hover {
   background: #1d4ed8;
+}
+
+.qr-btn-blue-solid {
+  background: #1d4ed8 !important;
+  color: #ffffff !important;
+  border: 1px solid #2563eb !important;
+}
+
+.qr-btn-blue-solid:hover {
+  background: #1e40af !important;
 }
 
 /* 多视图 View 容器布局 (确保 flex 100% 高度与独立滚动) */
@@ -2058,4 +2070,530 @@ th[aria-sort='descending'] .qr-sort-indicator::after {
   .qr-share-table td {
     padding: 5px 7px;
   }
+}
+
+/* ============ v3.5.0 新增组件与分层弹窗样式 ============ */
+.qr-modal-overlay .hidden,
+.qr-dialog-overlay .hidden {
+  display: none !important;
+}
+
+/* 多层级弹窗 Z-Index 架构（普通业务弹窗 < 二级选择器/部分转存 < 系统确认弹窗） */
+.qr-subdialog-overlay {
+  z-index: 100000010 !important;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.qr-system-dialog-overlay {
+  z-index: 100000020 !important;
+  background: rgba(0, 0, 0, 0.76);
+}
+
+/* Header 第二排右侧：账号与容量状态胶囊 */
+.qr-account-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #d4d4d8;
+  cursor: pointer;
+  max-width: 310px;
+  min-width: 0;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+  user-select: none;
+}
+
+.qr-account-pill:hover {
+  border-color: #3f3f46;
+  background: #141418;
+}
+
+.qr-account-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.qr-account-user .qr-icon {
+  width: 12px;
+  height: 12px;
+  fill: #60a5fa;
+}
+
+.qr-account-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 96px;
+  color: #fafafa;
+  font-weight: 500;
+}
+
+.qr-member-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.qr-member-svip {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.qr-member-vip {
+  background: rgba(37, 99, 235, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+.qr-account-sep {
+  color: #3f3f46;
+  flex-shrink: 0;
+}
+
+.qr-quota-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.qr-quota-mini-text {
+  color: #a1a1aa;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.qr-quota-mini-bar {
+  width: 42px;
+  height: 5px;
+  background: #27272a;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.qr-quota-mini-fill {
+  display: block;
+  height: 100%;
+  background: #22c55e;
+  border-radius: 3px;
+  transition: width 0.25s ease;
+}
+
+.qr-quota-mini-fill.is-warn {
+  background: #f59e0b;
+}
+
+.qr-quota-mini-fill.is-danger {
+  background: #ef4444;
+}
+
+/* 面包屑分割布局（左侧路径 / 右侧主面板高频工具按钮） */
+.qr-breadcrumbs-bar-split {
+  justify-content: space-between;
+  gap: 8px;
+  overflow: hidden;
+  padding: 4px 8px;
+}
+
+.qr-breadcrumbs-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.qr-breadcrumbs-ops {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* 分段切换器：目录过滤 / 全盘搜索 & 创建分享模式 */
+.qr-search-scope-group,
+.qr-segmented {
+  display: inline-flex;
+  align-items: center;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.qr-seg-btn {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #a1a1aa;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.qr-seg-btn:hover:not(:disabled) {
+  color: #e4e4e7;
+}
+
+.qr-seg-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.qr-seg-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 通用目标文件夹选择器弹窗 (picker.js) */
+.qr-picker-box {
+  width: 560px !important;
+  max-width: 92vw;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qr-picker-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.qr-picker-breadcrumbs {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  box-sizing: border-box;
+}
+
+.qr-picker-list {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  height: 240px;
+  overflow-y: auto;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.qr-picker-empty {
+  color: #71717a;
+  font-size: 12px;
+  text-align: center;
+  padding: 42px 12px;
+}
+
+.qr-picker-dir-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #e4e4e7;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.qr-picker-dir-row:hover:not(:disabled) {
+  background: #18181b;
+  border-color: #27272a;
+}
+
+.qr-picker-dir-row.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.qr-picker-dir-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.qr-picker-dir-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-picker-dir-meta {
+  font-size: 11px;
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.qr-picker-fid-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #a1a1aa;
+}
+
+.qr-picker-fid-row label {
+  white-space: nowrap;
+}
+
+.qr-picker-target-path {
+  font-size: 11px;
+  color: #60a5fa;
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 创建分享、批量转存与下载直链弹窗 (share-actions.js / actions.js) */
+.qr-share-create-box,
+.qr-saveas-box,
+.qr-download-box {
+  width: 600px !important;
+  max-width: 92vw;
+}
+
+.qr-share-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.qr-form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.qr-form-label {
+  font-size: 12px;
+  color: #a1a1aa;
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.qr-expire-pills {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.qr-expire-pills .qr-chip {
+  border: none;
+}
+
+.qr-modal-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.qr-stage-text {
+  font-size: 11px;
+  color: #60a5fa;
+}
+
+.qr-result-list {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  max-height: 175px;
+  overflow-y: auto;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qr-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #18181b;
+  border: 1px solid #27272a;
+  border-radius: 5px;
+  padding: 6px 10px;
+}
+
+.qr-result-row.is-ok {
+  border-left: 3px solid #22c55e;
+}
+
+.qr-result-row.is-err {
+  border-left: 3px solid #ef4444;
+}
+
+.qr-result-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.qr-result-title {
+  font-size: 12px;
+  color: #fafafa;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-result-sub {
+  font-size: 11px;
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+/* 批量 SaveAs 目标与配额栏 */
+.qr-saveas-dest-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.qr-saveas-dest-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.qr-saveas-dest-path {
+  font-size: 12px;
+  font-weight: 600;
+  color: #60a5fa;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qr-saveas-quota-banner {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #a1a1aa;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qr-saveas-quota-banner .qr-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.qr-saveas-quota-banner.is-ok {
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #d4d4d8;
+}
+
+.qr-saveas-quota-banner.is-warn {
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.qr-saveas-direct-preview {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+/* 分享详情弹窗：Tab 切换与包内文件浏览 */
+.qr-share-detail-box {
+  width: 660px !important;
+  max-width: 94vw;
+}
+
+.qr-detail-tabs {
+  flex-shrink: 0;
+}
+
+.qr-share-browser-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.qr-share-browser-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.qr-share-browser-table-wrap {
+  background: #09090b;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+  height: 225px;
+  overflow-y: auto;
+}
+
+.qr-share-browser-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
 }

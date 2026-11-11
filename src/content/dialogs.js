@@ -1,33 +1,42 @@
 /**
- * 手写弹窗组件：alert / confirm / prompt
+ * 手写弹窗组件：alert / confirm / prompt / toast
+ * 提示确认层使用 qr-system-dialog-overlay，可安全叠加在业务弹窗之上
  */
 
 import { escapeHtml } from './utils.js';
 
+function removeSystemDialogs() {
+  document.querySelectorAll('.qr-system-dialog-overlay').forEach((d) => d.remove());
+}
+
 export function customAlert(title, message) {
-  const oldDialogs = document.querySelectorAll('.qr-dialog-overlay');
-  oldDialogs.forEach((d) => d.remove());
+  removeSystemDialogs();
 
   const dialog = document.createElement('div');
-  dialog.className = 'qr-dialog-overlay';
+  dialog.className = 'qr-dialog-overlay qr-system-dialog-overlay';
   dialog.innerHTML = `
     <div class="qr-dialog-box">
       <div class="qr-dialog-title">${escapeHtml(title)}</div>
       <div class="qr-dialog-content">${escapeHtml(message)}</div>
       <div class="qr-dialog-actions">
-        <button class="qr-btn-primary qr-dialog-ok-btn" style="padding: 5px 16px;">确定</button>
+        <button type="button" class="qr-btn-primary qr-dialog-ok-btn" style="padding: 5px 16px;">确定</button>
       </div>
     </div>
   `;
   document.body.appendChild(dialog);
 
+  const onEsc = (e) => {
+    if (e.key === 'Escape') closeHandler(e);
+  };
   const closeHandler = (e) => {
     if (e) e.stopPropagation();
+    document.removeEventListener('keydown', onEsc);
     if (dialog && dialog.parentNode) {
       dialog.parentNode.removeChild(dialog);
     }
   };
 
+  document.addEventListener('keydown', onEsc);
   dialog.querySelector('.qr-dialog-ok-btn').onclick = closeHandler;
   dialog.onclick = (e) => {
     if (e.target === dialog) closeHandler(e);
@@ -35,31 +44,35 @@ export function customAlert(title, message) {
 }
 
 export function customConfirm(title, message, callback) {
-  const oldDialogs = document.querySelectorAll('.qr-dialog-overlay');
-  oldDialogs.forEach((d) => d.remove());
+  removeSystemDialogs();
 
   const dialog = document.createElement('div');
-  dialog.className = 'qr-dialog-overlay';
+  dialog.className = 'qr-dialog-overlay qr-system-dialog-overlay';
   dialog.innerHTML = `
     <div class="qr-dialog-box">
       <div class="qr-dialog-title">${escapeHtml(title)}</div>
-      <div class="qr-dialog-content">${escapeHtml(message)}</div>
+      <div class="qr-dialog-content" style="white-space: pre-line;">${escapeHtml(message)}</div>
       <div class="qr-dialog-actions">
-        <button class="qr-btn-secondary qr-dialog-cancel-btn">取消</button>
-        <button class="qr-btn-primary qr-dialog-ok-btn" style="padding: 5px 16px;">确认</button>
+        <button type="button" class="qr-btn-secondary qr-dialog-cancel-btn">取消</button>
+        <button type="button" class="qr-btn-primary qr-dialog-ok-btn" style="padding: 5px 16px;">确认</button>
       </div>
     </div>
   `;
   document.body.appendChild(dialog);
 
+  const onEsc = (e) => {
+    if (e.key === 'Escape') closeAndCall(false, e);
+  };
   const closeAndCall = (val, e) => {
     if (e) e.stopPropagation();
+    document.removeEventListener('keydown', onEsc);
     if (dialog && dialog.parentNode) {
       dialog.parentNode.removeChild(dialog);
     }
     callback(val);
   };
 
+  document.addEventListener('keydown', onEsc);
   dialog.querySelector('.qr-dialog-cancel-btn').onclick = (e) => closeAndCall(false, e);
   dialog.querySelector('.qr-dialog-ok-btn').onclick = (e) => closeAndCall(true, e);
   dialog.onclick = (e) => {
@@ -67,12 +80,11 @@ export function customConfirm(title, message, callback) {
   };
 }
 
-export function customPrompt(title, defaultValue, callback) {
-  const oldDialogs = document.querySelectorAll('.qr-dialog-overlay');
-  oldDialogs.forEach((d) => d.remove());
+export function customPrompt(title, defaultValue, callback, confirmLabel = '确认创建') {
+  removeSystemDialogs();
 
   const dialog = document.createElement('div');
-  dialog.className = 'qr-dialog-overlay';
+  dialog.className = 'qr-dialog-overlay qr-system-dialog-overlay';
   dialog.innerHTML = `
     <div class="qr-dialog-box">
       <div class="qr-dialog-title">${escapeHtml(title)}</div>
@@ -80,8 +92,8 @@ export function customPrompt(title, defaultValue, callback) {
         <input type="text" id="qrPromptInput" class="qr-input" value="${escapeHtml(defaultValue)}" style="width: 100%; box-sizing: border-box; font-size: 13px; padding: 6px 10px; margin-top: 6px;">
       </div>
       <div class="qr-dialog-actions">
-        <button class="qr-btn-secondary qr-dialog-cancel-btn">取消</button>
-        <button class="qr-btn-primary qr-dialog-ok-btn" style="padding: 5px 16px;">确认创建</button>
+        <button type="button" class="qr-btn-secondary qr-dialog-cancel-btn">取消</button>
+        <button type="button" class="qr-btn-primary qr-dialog-ok-btn" style="padding: 5px 16px;">${escapeHtml(confirmLabel)}</button>
       </div>
     </div>
   `;
@@ -95,8 +107,12 @@ export function customPrompt(title, defaultValue, callback) {
     }, 50);
   }
 
+  const onEsc = (e) => {
+    if (e.key === 'Escape') closeAndCall(false, e);
+  };
   const closeAndCall = (val, e) => {
     if (e) e.stopPropagation();
+    document.removeEventListener('keydown', onEsc);
     const inputVal = inputEl ? inputEl.value.trim() : '';
     if (dialog && dialog.parentNode) {
       dialog.parentNode.removeChild(dialog);
@@ -104,8 +120,12 @@ export function customPrompt(title, defaultValue, callback) {
     callback(val ? inputVal : null);
   };
 
+  document.addEventListener('keydown', onEsc);
   dialog.querySelector('.qr-dialog-cancel-btn').onclick = (e) => closeAndCall(false, e);
   dialog.querySelector('.qr-dialog-ok-btn').onclick = (e) => closeAndCall(true, e);
+  dialog.onclick = (e) => {
+    if (e.target === dialog) closeAndCall(false, e);
+  };
   if (inputEl) {
     inputEl.onkeydown = (e) => {
       if (e.key === 'Enter') closeAndCall(true, e);
