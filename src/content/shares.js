@@ -16,7 +16,7 @@ import {
 } from './utils.js';
 import { isQuarkOk, requestDeleteShares, requestMySharesPage } from './api.js';
 import { customAlert, customConfirm, toast } from './dialogs.js';
-import { mountShareInnerBrowser, openBatchSaveAsModal } from './share-actions.js';
+import { mountShareInnerBrowser, openBatchSaveAsModal, openCreateShareModal } from './share-actions.js';
 
 const SHARE_CACHE_KEY = 'quark_shares_cache_v1';
 const TEXT_COLLATOR = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' });
@@ -1047,6 +1047,34 @@ function runBatchCancelShares() {
   );
 }
 
+function openReshareForItem(item) {
+  if (!item) return;
+  if (!item.first_fid) {
+    customAlert(
+      '无法重开分享',
+      '该分享记录缺少原始文件 FID（first_fid，常见于纯文本导入记录），请先点击顶部「一键拉取」同步线上记录后再试。'
+    );
+    return;
+  }
+
+  openCreateShareModal(
+    [
+      {
+        fid: item.first_fid,
+        file_name: item.first_file_name || item.title,
+        is_dir: Boolean(item.is_dir),
+        size: Number(item.size) || 0
+      }
+    ],
+    {
+      initialTitle: item.title,
+      initialUrlType: item.url_type,
+      initialExpiredType: item.expired_type,
+      onSharesCreated: prependCreatedShares
+    }
+  );
+}
+
 function openShareDetailModal(item) {
   if (!item) return;
   document.querySelectorAll('.qr-dialog-overlay:not(.qr-system-dialog-overlay)').forEach((d) => d.remove());
@@ -1114,10 +1142,15 @@ function openShareDetailModal(item) {
 
         <div id="qrDetailBrowserPane" class="hidden"></div>
       </div>
-      <div class="qr-dialog-actions" style="justify-content: space-between;">
-        <div style="display:flex; gap:8px;">
+      <div class="qr-dialog-actions" style="justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button type="button" id="qrDetailCopyBtn" class="qr-btn-tool qr-btn-purple">${ICONS.copy} 复制分享文案</button>
           <button type="button" id="qrDetailSaveAsBtn" class="qr-btn-tool qr-btn-green">${ICONS.download} 转存此分享</button>
+          ${
+            item.first_fid
+              ? `<button type="button" id="qrDetailReshareBtn" class="qr-btn-tool qr-btn-amber" title="使用原文件一键重新生成新分享链接">${ICONS.replay} 重开分享</button>`
+              : ''
+          }
         </div>
         <div style="display:flex; gap:8px;">
           ${
@@ -1182,6 +1215,14 @@ function openShareDetailModal(item) {
         return;
       }
       openBatchSaveAsModal({ initialLinksText: linkLine });
+    });
+  }
+
+  const reshareBtn = dialog.querySelector('#qrDetailReshareBtn');
+  if (reshareBtn) {
+    reshareBtn.addEventListener('click', () => {
+      closeDialog();
+      openReshareForItem(item);
     });
   }
 }
@@ -1468,9 +1509,11 @@ function renderShareTable() {
             <div class="qr-share-row-actions">
               <button type="button" class="qr-btn-tool qr-btn-purple qr-share-row-copy" data-uid="${escapeHtml(item.uid)}" title="复制分享链接">${ICONS.copy}</button>
               ${
-                safeHref
-                  ? `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" class="qr-btn-tool qr-btn-blue qr-share-row-open" title="新窗口打开分享">${ICONS.external}</a>`
-                  : ''
+                item.first_fid && (st.key === 'expired' || st.key === 'failed')
+                  ? `<button type="button" class="qr-btn-tool qr-btn-amber qr-share-row-reshare" data-uid="${escapeHtml(item.uid)}" title="使用原文件一键重开分享">${ICONS.replay}</button>`
+                  : safeHref
+                    ? `<a href="${escapeHtml(safeHref)}" target="_blank" rel="noopener noreferrer" class="qr-btn-tool qr-share-row-open qr-btn-blue" title="新窗口打开分享">${ICONS.external}</a>`
+                    : ''
               }
               <button type="button" class="qr-btn-tool qr-btn-green qr-share-row-detail" data-uid="${escapeHtml(item.uid)}" title="查看可视化详情">${ICONS.eye}</button>
             </div>
@@ -1505,6 +1548,13 @@ function renderShareTable() {
     btn.addEventListener('click', () => {
       const target = itemMap.get(btn.dataset.uid);
       if (target) openShareDetailModal(target);
+    });
+  });
+
+  tbody.querySelectorAll('.qr-share-row-reshare').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = itemMap.get(btn.dataset.uid);
+      if (target) openReshareForItem(target);
     });
   });
 

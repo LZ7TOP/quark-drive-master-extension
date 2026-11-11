@@ -101,7 +101,10 @@ function formatCreatedShareText(res) {
 // ==========================================
 // 1. 主面板选中文件 -> 一键创建/批量创建分享
 // ==========================================
-export function openCreateShareModal(selectedFiles, { onSharesCreated } = {}) {
+export function openCreateShareModal(
+  selectedFiles,
+  { onSharesCreated, initialTitle = '', initialUrlType = 1, initialExpiredType = 1 } = {}
+) {
   const targets = Array.isArray(selectedFiles) ? selectedFiles.filter((f) => f && f.fid && !String(f.fid).startsWith('dom_')) : [];
   if (targets.length === 0) {
     customAlert('提示', '请先在主面板勾选至少一个有效文件或文件夹（DOM 降级条目缺少真实 FID 无法分享）。');
@@ -114,10 +117,11 @@ export function openCreateShareModal(selectedFiles, { onSharesCreated } = {}) {
 
   document.querySelectorAll('.qr-dialog-overlay:not(.qr-system-dialog-overlay)').forEach((d) => d.remove());
 
-  const defaultTitle = targets.length === 1 ? targets[0].file_name : `${targets[0].file_name} 等 ${targets.length} 项`;
+  const fallbackTitle = targets.length === 1 ? targets[0].file_name : `${targets[0].file_name} 等 ${targets.length} 项`;
+  const defaultTitle = String(initialTitle || '').trim() || fallbackTitle;
   let bundleMode = 'single'; // 'single' 打包分享 | 'each' 逐个建链
-  let urlType = 1; // 1 公开 | 2 私密
-  let expiredType = 1; // 1..7
+  let urlType = Number(initialUrlType) === 2 ? 2 : 1; // 1 公开 | 2 私密
+  let expiredType = Math.min(7, Math.max(1, Number(initialExpiredType) || 1)); // 1..7
   const createdResults = [];
 
   const dialog = document.createElement('div');
@@ -146,15 +150,15 @@ export function openCreateShareModal(selectedFiles, { onSharesCreated } = {}) {
         <div class="qr-form-row">
           <label class="qr-form-label">访问权限</label>
           <div class="qr-segmented" id="qrShareUrlTypeGroup">
-            <button type="button" class="qr-seg-btn active" data-urltype="1">公开链接（免提取码）</button>
-            <button type="button" class="qr-seg-btn" data-urltype="2">${ICONS.lock} 私密链接（自动生成提取码）</button>
+            <button type="button" class="qr-seg-btn ${urlType === 1 ? 'active' : ''}" data-urltype="1">公开链接（免提取码）</button>
+            <button type="button" class="qr-seg-btn ${urlType === 2 ? 'active' : ''}" data-urltype="2">${ICONS.lock} 私密链接（自动生成提取码）</button>
           </div>
         </div>
 
         <div class="qr-form-row">
           <label class="qr-form-label">有效期限</label>
           <div class="qr-expire-pills" id="qrShareExpireGroup">
-            ${EXPIRE_OPTIONS.map((opt) => `<button type="button" class="qr-chip ${opt.value === 1 ? 'active' : ''}" data-exp="${opt.value}">${opt.label}</button>`).join('')}
+            ${EXPIRE_OPTIONS.map((opt) => `<button type="button" class="qr-chip ${opt.value === expiredType ? 'active' : ''}" data-exp="${opt.value}">${opt.label}</button>`).join('')}
           </div>
         </div>
       </div>

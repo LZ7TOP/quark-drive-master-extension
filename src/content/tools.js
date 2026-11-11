@@ -6,7 +6,8 @@ import { state } from './state.js';
 import { ICONS } from './constants.js';
 import { escapeHtml, formatSize, log } from './utils.js';
 import { customAlert, customConfirm, toast } from './dialogs.js';
-import { requestDeleteFiles, requestMoveFiles, scanSubdirectoryFiles, fetchFileList } from './api.js';
+import { fetchFileList, requestDeleteFiles, requestMoveFiles, scanLargeFilesInDirectory, scanSubdirectoryFiles } from './api.js';
+import { runBatchDelete, runBatchMove } from './actions.js';
 import { renderTable, updateStatText } from './ui.js';
 
 const TYPE_PATTERNS = {
@@ -386,6 +387,197 @@ async function executeFlattenMove() {
   );
 }
 
+let currentLargeScanResults = [];
+
+function renderLargeScanList() {
+  const resultEl = document.getElementById('qrLargeScanResult');
+  if (!resultEl) return;
+
+  if (currentLargeScanResults.length === 0) {
+    resultEl.innerHTML = `<div class="qr-tool-empty">${ICONS.check} 未发现达到所设体积阈值的文件</div>`;
+    return;
+  }
+
+  const totalBytes = currentLargeScanResults.reduce((s, it) => s + (Number(it.size) || 0), 0);
+  const maxBytes = currentLargeScanResults[0]?.size || 1;
+  const itemMap = new Map();
+  currentLargeScanResults.forEach((it) => itemMap.set(String(it.fid), it));
+
+  const updateLargeFooter = () => {
+    const selected = currentLargeScanResults.filter((it) => it.selected);
+    const selBytes = selected.reduce((s, it) => s + (Number(it.size) || 0), 0);
+    const summaryEl = document.getElementById('qrLargeSelSummary');
+    const moveBtn = document.getElementById('qrLargeMoveSelBtn');
+    const delBtn = document.getElementById('qrLargeDelSelBtn');
+    const allCb = document.getElementById('qrLargeSelectAllCb');
+
+    if (summaryEl) {
+      summaryEl.textContent = `已选 ${selected.length} 项 (${formatSize(selBytes)})`;
+    }
+    if (moveBtn) moveBtn.disabled = selected.length === 0;
+    if (delBtn) delBtn.disabled = selected.length === 0;
+    if (allCb) {
+      allCb.checked = currentLargeScanResults.length > 0 && selected.length === currentLargeScanResults.length;
+      allCb.indeterminate = selected.length > 0 && selected.length < currentLargeScanResults.length;
+    }
+  };
+
+  resultEl.innerHTML = `
+    <div class="qr-tool-actions" style="margin-top:0; justify-content:space-between;">
+      <label class="qr-checkbox-label" style="font-size:11px;">
+        <input type="checkbox" id="qrLargeSelectAllCb">
+        <span>全选 (共 ${currentLargeScanResults.length} 个大文件 · 合计 ${formatSize(totalBytes)})</span>
+      </label>
+      <span id="qrLargeSelSummary" style="font-size:11px; color:#a1a1aa;">已选 0 项 (0 B)</span>
+    </div>
+    <div class="qr-large-file-list">
+      ${currentLargeScanResults
+        .map((f) => {
+          const pct = Math.max(4, Math.min(100, Math.round(((f.size || 0) / maxBytes) * 100)));
+          const subPath = f.parentDir && f.parentDir !== '当前目录' ? `📁 ${f.parentDir}` : '';
+          return `
+            <label class="qr-large-file-row">
+              <input type="checkbox" class="qr-large-cb" data-fid="${escapeHtml(String(f.fid))}" ${f.selected ? 'checked' : ''}>
+              <div class="qr-large-file-info">
+                <div class="qr-large-file-top">
+                  <span class="qr-large-file-name" title="${escapeHtml(f.relPath || f.file_name)}">${escapeHtml(f.file_name)}</span>
+                  <span class="qr-large-file-size">${formatSize(f.size)}</span>
+                </div>
+                <div class="qr-large-file-sub">
+                  <div class="qr-large-size-bar"><div class="qr-large-size-bar-inner" style="width:${pct}%"></div></div>
+                  ${subPath ? `<span class="qr-large-file-path" title="${escapeHtml(f.parentDir)}">${escapeHtml(subPath)}</span>` : ''}
+                </div>
+              </div>
+            </label>
+          `;
+        })
+        .join('')}
+    </div>
+    <div class="qr-tool-actions" style="justify-content:flex-end; margin-top:6px;">
+      <button type="button" id="qrLargeMoveSelBtn" class="qr-btn-tool qr-btn-blue" disabled>${ICONS.move} 批量移动选中</button>
+      <button type="button" id="qrLargeDelSelBtn" class="qr-btn-tool qr-btn-red" disabled>${ICONS.trash} 清理选中文件</button>
+    </div>
+  `;
+
+  resultEl.querySelectorAll('.qr-large-cb').forEach((cb) => {
+    cb.addEventListener('change', (e) => {
+      const target = itemMap.get(String(e.target.dataset.fid));
+      if (target) target.selected = e.target.checked;
+      updateLargeFooter();
+    });
+  });
+
+  const allCb = document.getElementById('qrLargeSelectAllCb');
+  if (allCb) {
+    allCb.addEventListener('change', (e) => {
+      const checked = e.target.checked;
+      currentLargeScanResults.forEach((it) => {
+        it.selected = checked;
+      });
+      resultEl.querySelectorAll('.qr-large-cb').forEach((cb) => {
+        cb.checked = checked;
+      });
+      updateLargeFooter();
+    });
+  }
+
+  const moveBtn = document.getElementById('qrLargeMoveSelBtn');
+  if (moveBtn) {
+    moveBtn.addEventListener('click', () => {
+      const selected = currentLargeScanResults.filter((it) => it.selected);
+      if (selected.length === 0) return;
+      runBatchMove(selected, {
+        onCompleted: (movedFids) => {
+          const movedSet = new Set(movedFids.map(String));
+          currentLargeScanResults = currentLargeScanResults.filter((it) => !movedSet.has(String(it.fid)));
+          renderLargeScanList();
+          if (state.mainMode === 'dir') fetchFileList();
+        }
+      });
+    });
+  }
+
+  const delBtn = document.getElementById('qrLargeDelSelBtn');
+  if (delBtn) {
+    delBtn.addEventListener('click', () => {
+      const selected = currentLargeScanResults.filter((it) => it.selected);
+      if (selected.length === 0) return;
+      runBatchDelete(selected, {
+        onCompleted: (deletedFids) => {
+          const deletedSet = new Set(deletedFids.map(String));
+          currentLargeScanResults = currentLargeScanResults.filter((it) => !deletedSet.has(String(it.fid)));
+          renderLargeScanList();
+          if (state.mainMode === 'dir') fetchFileList();
+        }
+      });
+    });
+  }
+
+  updateLargeFooter();
+}
+
+async function runLargeFilesScan() {
+  const resultEl = document.getElementById('qrLargeScanResult');
+  const scanBtn = document.getElementById('qrScanLargeBtn');
+  const thresholdInput = document.getElementById('qrLargeThresholdMb');
+  const recursiveCb = document.getElementById('qrLargeRecursiveCb');
+  if (!resultEl) return;
+
+  const thresholdMb = Math.max(1, parseFloat(thresholdInput?.value) || 500);
+  const minBytes = thresholdMb * 1024 * 1024;
+  const recursive = Boolean(recursiveCb?.checked);
+
+  if (recursive) {
+    if (state.mainMode === 'search') {
+      customAlert('提示', '当前处于「搜索视图」，无法基于当前目录递归扫描。请取消勾选递归仅扫当前列表，或切回文件夹目录后再试。');
+      return;
+    }
+    if (scanBtn) {
+      scanBtn.disabled = true;
+      scanBtn.innerHTML = `${ICONS.refresh} 扫描中...`;
+    }
+    resultEl.innerHTML = `<div class="qr-tool-tip">正在递归扫描目录及子文件夹（阈值 >= ${thresholdMb} MB）...</div>`;
+
+    try {
+      const { matches, scannedDirs } = await scanLargeFilesInDirectory(state.pdir_fid || '0', minBytes, {
+        maxDepth: 5,
+        maxDirs: 80,
+        onProgress: ({ scannedDirs: d, matchCount }) => {
+          resultEl.innerHTML = `<div class="qr-tool-tip">已扫描 ${d} 个目录 · 命中 ${matchCount} 个大文件...</div>`;
+        }
+      });
+      currentLargeScanResults = matches.map((m) => ({ ...m, selected: false }));
+      renderLargeScanList();
+      log(`大体积文件扫描完成（遍历 ${scannedDirs} 个目录），发现 ${matches.length} 个 >= ${thresholdMb} MB 的文件`);
+    } catch (err) {
+      resultEl.innerHTML = `<div class="qr-tool-empty" style="color:#ef4444;">扫描失败: ${escapeHtml(err.message)}</div>`;
+    } finally {
+      if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = `${ICONS.search} 开始扫描大文件`;
+      }
+    }
+    return;
+  }
+
+  const localMatches = state.fileList
+    .filter((f) => !f.is_dir && (Number(f.size) || 0) >= minBytes)
+    .sort((a, b) => (Number(b.size) || 0) - (Number(a.size) || 0))
+    .map((f) => ({
+      fid: f.fid,
+      pdir_fid: f.pdir_fid || state.pdir_fid || '0',
+      file_name: f.file_name,
+      is_dir: false,
+      size: Number(f.size) || 0,
+      parentDir: '当前列表',
+      relPath: f.file_name,
+      selected: false
+    }));
+
+  currentLargeScanResults = localMatches;
+  renderLargeScanList();
+}
+
 export function renderToolsViewComponent() {
   const toolsViewEl = document.getElementById('viewTools');
   if (!toolsViewEl) return;
@@ -396,6 +588,30 @@ export function renderToolsViewComponent() {
         <div class="qr-tool-card-header">${ICONS.stats} 目录统计</div>
         <div id="qrStatsGrid" class="qr-stat-grid"></div>
         <div id="qrTypeDist" class="qr-type-dist"></div>
+      </div>
+
+      <div class="qr-tool-card">
+        <div class="qr-tool-card-header">${ICONS.storage} 大体积文件扫描与清理</div>
+        <p class="qr-tool-desc">按自定义体积阈值找出占用空间的大文件（支持仅扫当前列表或深度递归子目录），支持一键批量移动或清理。</p>
+        <div class="qr-large-controls">
+          <div class="qr-large-presets" id="qrLargePresetChips">
+            <button type="button" class="qr-chip" data-mb="100">100 MB</button>
+            <button type="button" class="qr-chip active" data-mb="500">500 MB</button>
+            <button type="button" class="qr-chip" data-mb="1024">1 GB</button>
+            <button type="button" class="qr-chip" data-mb="5120">5 GB</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="font-size:11px; color:#a1a1aa;">阈值(MB):</span>
+            <input type="number" id="qrLargeThresholdMb" class="qr-input" value="500" min="1" style="width:78px; height:26px; font-size:11px; flex:none;">
+          </div>
+        </div>
+        <div class="qr-tool-actions" style="justify-content:space-between;">
+          <label class="qr-checkbox-label" title="勾选后将深度递归遍历当前文件夹下的所有子目录">
+            <input type="checkbox" id="qrLargeRecursiveCb"> 递归扫描子目录
+          </label>
+          <button id="qrScanLargeBtn" class="qr-btn-tool qr-btn-blue">${ICONS.search} 开始扫描大文件</button>
+        </div>
+        <div id="qrLargeScanResult" class="qr-tool-result"></div>
       </div>
 
       <div class="qr-tool-card">
@@ -430,11 +646,31 @@ export function bindToolsEvents() {
   const detectBtn = document.getElementById('qrDetectDupBtn');
   const inspectBtn = document.getElementById('qrInspectBtn');
   const fixBtn = document.getElementById('qrFixNamesBtn');
+  const scanLargeBtn = document.getElementById('qrScanLargeBtn');
+  const thresholdInput = document.getElementById('qrLargeThresholdMb');
 
   if (flattenBtn) flattenBtn.addEventListener('click', scanFlattenSubdirs);
   if (detectBtn) detectBtn.addEventListener('click', detectDuplicates);
   if (inspectBtn) inspectBtn.addEventListener('click', inspectNames);
   if (fixBtn) fixBtn.addEventListener('click', fixNames);
+  if (scanLargeBtn) scanLargeBtn.addEventListener('click', runLargeFilesScan);
+
+  document.querySelectorAll('#qrLargePresetChips .qr-chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('#qrLargePresetChips .qr-chip').forEach((c) => c.classList.remove('active'));
+      chip.classList.add('active');
+      if (thresholdInput) thresholdInput.value = chip.dataset.mb || '500';
+    });
+  });
+
+  if (thresholdInput) {
+    thresholdInput.addEventListener('input', () => {
+      const val = thresholdInput.value;
+      document.querySelectorAll('#qrLargePresetChips .qr-chip').forEach((c) => {
+        c.classList.toggle('active', c.dataset.mb === val);
+      });
+    });
+  }
 }
 
 export function refreshToolsView() {

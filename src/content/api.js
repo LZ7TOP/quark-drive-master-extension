@@ -4,7 +4,7 @@
  */
 
 import { state } from './state.js';
-import { escapeHtml, log } from './utils.js';
+import { escapeHtml, log, sortFileItems } from './utils.js';
 import { recalculateNewNames } from './rename.js';
 
 const API_BASE = 'https://drive-pc.quark.cn/1/clouddrive';
@@ -415,11 +415,15 @@ export async function requestAccountQuota() {
   }
 }
 
-async function fetchDirectoryAllPages(pdirFid, maxPages = 20) {
+async function fetchDirectoryAllPages(pdirFid, maxPages = 20, startPage = 1) {
   const collected = [];
   const pageSize = 200;
+  const endPage = startPage + maxPages - 1;
+  let total = 0;
+  let lastPage = startPage - 1;
+  let hasMore = false;
 
-  for (let page = 1; page <= maxPages; page++) {
+  for (let page = startPage; page <= endPage; page++) {
     const res = await bgSendMessage({ action: 'API_FETCH_DIRECTORY', pdir_fid: pdirFid, page, size: pageSize });
     if (!res.success) {
       throw new Error(res.error || `请求 FID ${pdirFid} 异常`);
@@ -432,19 +436,34 @@ async function fetchDirectoryAllPages(pdirFid, maxPages = 20) {
 
     const list = data.data.list;
     collected.push(...list);
+    lastPage = page;
 
-    const total = Number(data.metadata?._total ?? data.data?.total ?? 0);
-    if (list.length < pageSize || (total > 0 && collected.length >= total)) {
+    const reportedTotal = Number(data.metadata?._total ?? data.data?.total ?? 0);
+    if (reportedTotal > 0) total = reportedTotal;
+
+    const estimatedLoaded = (startPage - 1) * pageSize + collected.length;
+    if (list.length < pageSize || (total > 0 && estimatedLoaded >= total)) {
+      hasMore = false;
       break;
+    }
+
+    if (page === endPage) {
+      hasMore = true;
     }
   }
 
-  return collected;
+  return {
+    items: collected,
+    total,
+    lastPage,
+    hasMore,
+    truncated: hasMore
+  };
 }
 
 // 目录选择器懒加载子目录列表（仅文件夹，不改动主面板 state.fileList）
 export async function listSubdirectoriesForPicker(pdirFid = '0') {
-  const items = await fetchDirectoryAllPages(pdirFid || '0', 10);
+  const { items } = await fetchDirectoryAllPages(pdirFid || '0', 10);
   return items
     .filter((item) => Boolean(item.dir || item.file_type === 'dir' || item.file_type === 0 || item.file_type === '0'))
     .map((item) => ({
@@ -468,7 +487,8 @@ export async function scanSubdirectoryFiles(parentPdirFid) {
 
     let items = [];
     try {
-      items = await fetchDirectoryAllPages(pdirFid, 10);
+      const pageRes = await fetchDirectoryAllPages(pdirFid, 10);
+      items = pageRes.items;
     } catch (err) {
       log(`扫描子目录 ${pdirFid} 跳过: ${err.message}`);
       return;
@@ -502,55 +522,128 @@ export async function scanSubdirectoryFiles(parentPdirFid) {
   return result;
 }
 
+// 递归扫描指定目录内达到体积阈值的大文件
+export async function scanLargeFilesInDirectory(parentPdirFid, minBytes, { maxDepth = 5, maxDirs = 80, onProgress } = {}) {
+  const matches = [];
+  let scannedDirs = 0;
+
+  async function traverse(pdirFid, currentPath, depth = 0) {
+    if (depth > maxDepth || scannedDirs >= maxDirs) return;
+    scannedDirs++;
+    if (typeof onProgress === 'function') {
+      onProgress({ scannedDirs, matchCount: matches.length, currentPath: currentPath || '当前目录' });
+    }
+
+    let items = [];
+    try {
+      const pageRes = await fetchDirectoryAllPages(pdirFid, 10);
+      items = pageRes.items;
+    } catch (err) {
+      log(`大文件扫描跳过目录 ${pdirFid}: ${err.message}`);
+      return;
+    }
+
+    for (const item of items) {
+      const isDir = Boolean(item.dir || item.file_type === 'dir' || item.file_type === 0 || item.file_type === '0');
+      const relPath = currentPath ? `${currentPath}/${item.file_name}` : item.file_name;
+      const size = Number(item.size) || 0;
+
+      if (isDir) {
+        if (depth < maxDepth && scannedDirs < maxDirs) {
+          await traverse(item.fid, relPath, depth + 1);
+        }
+      } else if (size >= minBytes) {
+        matches.push({
+          fid: item.fid,
+          pdir_fid: item.pdir_fid || pdirFid,
+          file_name: item.file_name,
+          is_dir: false,
+          size,
+          updated_at: item.updated_at || item.l_updated_at || 0,
+          parentDir: currentPath || '当前目录',
+          relPath
+        });
+      }
+    }
+  }
+
+  await traverse(parentPdirFid || '0', '', 0);
+  matches.sort((a, b) => b.size - a.size);
+  return { matches, scannedDirs };
+}
+
+function normalizeDirectoryEntry(item, fallbackPdirFid) {
+  const isDirectory = Boolean(item.dir || item.file_type === 'dir' || item.file_type === 0 || item.file_type === '0');
+  return {
+    fid: item.fid,
+    pdir_fid: item.pdir_fid || fallbackPdirFid,
+    file_name: item.file_name,
+    is_dir: isDirectory,
+    file_type: item.file_type,
+    size: Number(item.size) || 0,
+    updated_at: item.updated_at || item.l_updated_at || 0,
+    selected: true,
+    visible: true,
+    new_name: item.file_name,
+    _renameError: '',
+    _regexError: ''
+  };
+}
+
 // 加载目录文件到主面板（支持分页与可选递归子目录）
 export async function loadDirectoryFiles(pdirFid, currentPath, depth = 0) {
   if (depth > 5) return;
 
-  const items = await fetchDirectoryAllPages(pdirFid, 20);
+  const { items, total, lastPage, hasMore, truncated } = await fetchDirectoryAllPages(pdirFid, 20, 1);
+  if (depth === 0) {
+    state.dirTotal = total || items.length;
+    state.dirLoadedPages = lastPage;
+    state.dirHasMore = !state.includeSubDirs && hasMore;
+    state.dirTruncated = Boolean(truncated);
+  }
+
   for (const item of items) {
     const relPath = currentPath ? `${currentPath}/${item.file_name}` : item.file_name;
-    const isDirectory = Boolean(item.dir || item.file_type === 'dir' || item.file_type === 0 || item.file_type === '0');
+    const entry = normalizeDirectoryEntry(item, pdirFid);
+    state.fileList.push(entry);
 
-    state.fileList.push({
-      fid: item.fid,
-      pdir_fid: item.pdir_fid || pdirFid,
-      file_name: item.file_name,
-      is_dir: isDirectory,
-      file_type: item.file_type,
-      size: Number(item.size) || 0,
-      selected: true,
-      visible: true,
-      new_name: item.file_name
-    });
-
-    if (state.includeSubDirs && isDirectory) {
+    if (state.includeSubDirs && entry.is_dir) {
       log(`扫描子目录: ${relPath}`);
       await loadDirectoryFiles(item.fid, relPath, depth + 1);
     }
   }
 }
 
-export function sortFileList() {
-  state.fileList.sort((a, b) => {
-    if (a.is_dir !== b.is_dir) {
-      return a.is_dir ? -1 : 1;
-    }
+export async function loadMoreCurrentDirectory() {
+  if (state.mainMode !== 'dir' || !state.dirHasMore || state.isRunning) return 0;
 
-    if (state.sortBy === 'natural_asc') {
-      return a.file_name.localeCompare(b.file_name, undefined, { numeric: true, sensitivity: 'base' });
-    } else if (state.sortBy === 'natural_desc') {
-      return b.file_name.localeCompare(a.file_name, undefined, { numeric: true, sensitivity: 'base' });
-    } else if (state.sortBy === 'name_asc') {
-      return a.file_name.localeCompare(b.file_name);
-    } else if (state.sortBy === 'name_desc') {
-      return b.file_name.localeCompare(a.file_name);
-    } else if (state.sortBy === 'size_asc') {
-      return a.size - b.size;
-    } else if (state.sortBy === 'size_desc') {
-      return b.size - a.size;
+  const seq = state.fetchSeq;
+  const startPage = Math.max(1, (state.dirLoadedPages || 0) + 1);
+  const { items, total, lastPage, hasMore } = await fetchDirectoryAllPages(state.pdir_fid, 10, startPage);
+  if (seq !== state.fetchSeq) return 0;
+
+  const existingFids = new Set(state.fileList.map((f) => String(f.fid)));
+  let appended = 0;
+  items.forEach((item) => {
+    if (!existingFids.has(String(item.fid))) {
+      existingFids.add(String(item.fid));
+      state.fileList.push(normalizeDirectoryEntry(item, state.pdir_fid));
+      appended++;
     }
-    return 0;
   });
+
+  if (total > 0) state.dirTotal = total;
+  state.dirLoadedPages = lastPage;
+  state.dirHasMore = hasMore;
+  state.dirTruncated = hasMore;
+
+  sortFileList();
+  recalculateNewNames();
+  return appended;
+}
+
+export function sortFileList() {
+  sortFileItems(state.fileList, state.sortBy);
 }
 
 // 从夸克网盘网页 DOM 节点中精准智能捕获文件与 FID (带严密噪音过滤)
@@ -576,9 +669,12 @@ export function captureFilesFromDom() {
         is_dir: !!isDir,
         file_type: isDir ? 'dir' : 'file',
         size: 0,
+        updated_at: 0,
         selected: true,
         visible: true,
-        new_name: name
+        new_name: name,
+        _renameError: '',
+        _regexError: ''
       });
     }
   });
@@ -589,6 +685,10 @@ export async function fetchFileList() {
   state.mainMode = 'dir';
   state.searchQuery = '';
   state.searchTotal = 0;
+  state.dirTotal = 0;
+  state.dirTruncated = false;
+  state.dirLoadedPages = 0;
+  state.dirHasMore = false;
 
   if (tableBody) {
     tableBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #71717a; padding: 30px;">正在获取文件数据 (FID: ${escapeHtml(String(state.pdir_fid))})...</td></tr>`;
@@ -609,6 +709,8 @@ export async function fetchFileList() {
     recalculateNewNames();
     if (state.fileList.length === 0) {
       log(`当前目录 FID:${state.pdir_fid} 为空文件夹 (0 项)`);
+    } else if (state.dirTruncated) {
+      log(`目录项目较多，已首批加载 ${state.fileList.length} 项（可点击列表上方「继续加载更多」）`);
     } else {
       log(`加载成功: 当前层级文件 ${state.fileList.length} 项`);
     }
@@ -627,7 +729,73 @@ export async function fetchFileList() {
   }
 }
 
-// 执行全盘云端检索并渲染到主表格
+function normalizeSearchEntry(item) {
+  const isDir = Boolean(item.dir || item.file_type === 'dir' || item.file_type === 0 || item.file_type === '0');
+  const fileName = String(item.file_name || item.filename || '');
+  return {
+    fid: item.fid,
+    pdir_fid: String(item.pdir_fid || '0'),
+    file_name: fileName,
+    is_dir: isDir,
+    file_type: item.file_type,
+    size: Number(item.size) || 0,
+    updated_at: item.updated_at || item.l_updated_at || 0,
+    fromSearch: true,
+    selected: false,
+    visible: true,
+    new_name: fileName,
+    _renameError: '',
+    _regexError: ''
+  };
+}
+
+// 分批拉取全盘搜索结果（供「全局搜改」独立页签与分页加载复用）
+export async function fetchSearchDrivePageBatch({ query, startPage = 1, pageCount = 2, size = 100 } = {}) {
+  const q = String(query || '').trim();
+  if (!q) {
+    return { items: [], total: 0, lastPage: startPage - 1, hasMore: false };
+  }
+
+  const pageSize = Math.min(100, Math.max(1, Number(size) || 100));
+  const endPage = startPage + Math.max(1, pageCount) - 1;
+  const collected = [];
+  let total = 0;
+  let lastPage = startPage - 1;
+  let hasMore = false;
+
+  for (let page = startPage; page <= endPage; page++) {
+    const res = await requestSearchDriveFiles({ query: q, page, size: pageSize });
+    if (!isQuarkOk(res)) {
+      throw new Error(res?.message || res?.error || '全盘搜索失败');
+    }
+
+    const pageList = Array.isArray(res.data?.list) ? res.data.list : [];
+    const reportedTotal = Number(res.metadata?._total ?? res.data?.total ?? 0);
+    if (reportedTotal > 0) total = reportedTotal;
+
+    collected.push(...pageList.map(normalizeSearchEntry));
+    lastPage = page;
+
+    const estimatedLoaded = (startPage - 1) * pageSize + collected.length;
+    if (pageList.length < pageSize || (total > 0 && estimatedLoaded >= total)) {
+      hasMore = false;
+      break;
+    }
+
+    if (page === endPage) {
+      hasMore = true;
+    }
+  }
+
+  return {
+    items: collected,
+    total: total || (startPage - 1) * pageSize + collected.length,
+    lastPage,
+    hasMore
+  };
+}
+
+// 执行全盘云端检索并渲染到主表格（保留兼容）
 export async function searchDriveFiles(keyword) {
   const q = String(keyword || '').trim();
   if (!q) return;
@@ -645,48 +813,11 @@ export async function searchDriveFiles(keyword) {
   const seq = ++state.fetchSeq;
 
   try {
-    const collected = [];
-    const pageSize = 100;
-    const maxPages = 5;
-    let total = 0;
+    const batch = await fetchSearchDrivePageBatch({ query: q, startPage: 1, pageCount: 5, size: 100 });
+    if (seq !== state.fetchSeq) return;
 
-    for (let page = 1; page <= maxPages; page++) {
-      const res = await requestSearchDriveFiles({ query: q, page, size: pageSize });
-      if (seq !== state.fetchSeq) return;
-
-      if (!isQuarkOk(res)) {
-        throw new Error(res?.message || res?.error || '全盘搜索失败');
-      }
-
-      const pageList = Array.isArray(res.data?.list) ? res.data.list : [];
-      if (page === 1) {
-        total = Number(res.metadata?._total ?? res.data?.total ?? pageList.length);
-      }
-      collected.push(...pageList);
-
-      if (pageList.length < pageSize || (total > 0 && collected.length >= total)) {
-        break;
-      }
-    }
-
-    state.searchTotal = total || collected.length;
-    state.fileList = collected.map((item) => {
-      const isDir = Boolean(item.dir || item.file_type === 'dir' || item.file_type === 0 || item.file_type === '0');
-      const fileName = String(item.file_name || item.filename || '');
-      return {
-        fid: item.fid,
-        pdir_fid: item.pdir_fid || '0',
-        file_name: fileName,
-        is_dir: isDir,
-        file_type: item.file_type,
-        size: Number(item.size) || 0,
-        updated_at: item.updated_at || item.l_updated_at || 0,
-        fromSearch: true,
-        selected: false,
-        visible: true,
-        new_name: fileName
-      };
-    });
+    state.searchTotal = batch.total;
+    state.fileList = batch.items;
 
     sortFileList();
     recalculateNewNames();

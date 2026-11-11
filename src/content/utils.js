@@ -170,3 +170,38 @@ export function sanitizeHttpUrl(url) {
   }
   return '';
 }
+
+export function sortFileItems(list, sortBy = 'natural_asc') {
+  if (!Array.isArray(list)) return [];
+  return list.sort((a, b) => {
+    if (Boolean(a.is_dir) !== Boolean(b.is_dir)) {
+      return a.is_dir ? -1 : 1;
+    }
+
+    const nameA = String(a.file_name || '');
+    const nameB = String(b.file_name || '');
+
+    if (sortBy === 'natural_asc') {
+      return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    if (sortBy === 'natural_desc') {
+      return nameB.localeCompare(nameA, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    if (sortBy === 'name_asc') {
+      return nameA.localeCompare(nameB);
+    }
+    if (sortBy === 'name_desc') {
+      return nameB.localeCompare(nameA);
+    }
+    if (sortBy === 'size_asc') {
+      return (Number(a.size) || 0) - (Number(b.size) || 0);
+    }
+    if (sortBy === 'size_desc') {
+      return (Number(b.size) || 0) - (Number(a.size) || 0);
+    }
+    if (sortBy === 'updated_desc') {
+      return (Number(b.updated_at) || 0) - (Number(a.updated_at) || 0);
+    }
+    return 0;
+  });
+}

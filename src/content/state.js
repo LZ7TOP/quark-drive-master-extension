@@ -6,9 +6,13 @@ export const state = {
   pdir_fid: '0',
   breadcrumbs: [{ fid: '0', name: '全部文件' }],
   mainMode: 'dir', // 'dir' 目录浏览 | 'search' 全盘搜索
-  searchScope: 'local', // 'local' 当前过滤 | 'cloud' 全盘检索
+  searchScope: 'local', // 'local' 当前过滤
   searchQuery: '',
   searchTotal: 0,
+  dirTotal: 0,
+  dirTruncated: false,
+  dirLoadedPages: 0,
+  dirHasMore: false,
   includeSubDirs: false,
   fileList: [],
   activeTab: 'replace',
@@ -45,6 +49,34 @@ export const state = {
     cleanUrl: true,
     cleanBracket: true,
     cleanTrad: true
+  },
+  globalSearch: {
+    keyword: '',
+    items: [],
+    total: 0,
+    loadedPages: 0,
+    hasMore: false,
+    isLoading: false,
+    fetchSeq: 0,
+    targetType: 'all', // 'all' | 'file' | 'dir'
+    localFilter: '',
+    ruleTab: 'replace', // 'replace' | 'prefix' | 'extension' | 'clean'
+    autoSyncKeyword: true,
+    sortBy: 'natural_asc',
+    config: {
+      replaceSearch: '',
+      replaceTarget: '',
+      isRegex: false,
+      ignoreCase: true,
+      targetRange: 'name',
+      prefix: '',
+      suffix: '',
+      newExt: '',
+      caseChange: 'none',
+      cleanUrl: true,
+      cleanBracket: true,
+      cleanTrad: true
+    }
   },
   shares: {
     list: [],

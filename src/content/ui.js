@@ -5,7 +5,7 @@
 import { state } from './state.js';
 import { ICONS, DEFAULT_CHANGELOG_DATA, RENAME_TEMPLATES } from './constants.js';
 import { escapeHtml, fetchJsonData, formatSize, log } from './utils.js';
-import { fetchFileList, requestAccountQuota, searchDriveFiles } from './api.js';
+import { fetchFileList, loadMoreCurrentDirectory, requestAccountQuota, searchDriveFiles } from './api.js';
 import { recalculateNewNames, updateConfigFromUI } from './rename.js';
 import { exportCsvMapping, importCsvMapping } from './csv.js';
 import { openHistoryModal } from './history.js';
@@ -21,6 +21,54 @@ import { customConfirm, customAlert, toast } from './dialogs.js';
 import { renderToolsViewComponent, bindToolsEvents, refreshToolsView } from './tools.js';
 import { bindSharesEvents, fetchAllMyShares, onEnterSharesView, prependCreatedShares, renderSharesViewComponent } from './shares.js';
 import { openCreateShareModal } from './share-actions.js';
+import { bindGlobalEvents, onEnterGlobalView, openGlobalSearchWithKeyword, renderGlobalViewComponent } from './global-rename.js';
+
+const USER_PREFS_KEY = 'quark_user_prefs_v1';
+let docSelectBound = false;
+let globalKeyBound = false;
+
+export function persistUserPrefs() {
+  try {
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.set(
+      {
+        [USER_PREFS_KEY]: {
+          delayMs: Math.max(100, Math.min(3000, Number(state.delayMs) || 500))
+        }
+      },
+      () => {
+        if (chrome.runtime?.lastError) {
+          console.warn('[Quark Assistant] 保存偏好失败:', chrome.runtime.lastError.message);
+        }
+      }
+    );
+  } catch (err) {
+    console.warn('[Quark Assistant] 保存偏好异常:', err);
+  }
+}
+
+function loadUserPrefs() {
+  try {
+    if (!chrome?.storage?.local) return;
+    chrome.storage.local.get([USER_PREFS_KEY], (res) => {
+      if (chrome.runtime?.lastError) {
+        console.warn('[Quark Assistant] 读取偏好失败:', chrome.runtime.lastError.message);
+        return;
+      }
+      const prefs = res && res[USER_PREFS_KEY];
+      if (prefs && prefs.delayMs !== undefined) {
+        const val = Math.max(100, Math.min(3000, parseInt(prefs.delayMs, 10) || 500));
+        state.delayMs = val;
+        const mainDelay = document.getElementById('qrDelayInput');
+        if (mainDelay) mainDelay.value = String(val);
+        const globalDelay = document.getElementById('qrGlobalDelayInput');
+        if (globalDelay) globalDelay.value = String(val);
+      }
+    });
+  } catch (err) {
+    console.warn('[Quark Assistant] 读取偏好异常:', err);
+  }
+}
 
 export function createFloatButton() {
   if (document.getElementById('quark-rename-float-btn')) return;
@@ -156,6 +204,7 @@ export function createModalUI() {
         <div class="qr-header-bottom">
           <div class="qr-page-nav">
             <button class="qr-nav-item active" data-view="main">${ICONS.zap} 重命名主页</button>
+            <button class="qr-nav-item" data-view="global">${ICONS.globe} 全局搜改</button>
             <button class="qr-nav-item" data-view="shares">${ICONS.share} 我的分享</button>
             <button class="qr-nav-item" data-view="csv">${ICONS.csv} CSV 工具</button>
             <button class="qr-nav-item" data-view="tools">${ICONS.toolbox} 工具箱</button>
@@ -170,6 +219,7 @@ export function createModalUI() {
 
       <div class="qr-body">
         <div id="viewMain" class="qr-page-view"></div>
+        <div id="viewGlobal" class="qr-page-view hidden"></div>
         <div id="viewShares" class="qr-page-view hidden"></div>
         <div id="viewCsv" class="qr-page-view hidden"></div>
         <div id="viewTools" class="qr-page-view hidden"></div>
@@ -188,7 +238,7 @@ export function createModalUI() {
             <input type="number" id="qrDelayInput" class="qr-input" value="500" min="100" max="3000" style="width: 68px; padding: 3px 6px;">
             <span style="font-size: 11px; color: #71717a;">(推荐500)</span>
           </div>
-          <div style="display: flex; gap: 6px; align-items: center;">
+          <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
             <span id="qrStatText" style="font-size: 11px; color: #a1a1aa;">共 0 项文件</span>
             <button id="qrMoveBtn" class="qr-btn-primary qr-btn-blue-solid">${ICONS.move} 批量移动 (0)</button>
             <button id="qrDeleteBtn" class="qr-btn-primary qr-btn-red">${ICONS.trash} 批量删除 (0)</button>
@@ -202,15 +252,21 @@ export function createModalUI() {
   document.body.appendChild(overlay);
 
   renderMainViewComponent();
+  renderGlobalViewComponent();
   renderSharesViewComponent();
   renderCsvViewComponent();
   renderToolsViewComponent();
   loadAndRenderChangelogComponent();
   loadAndRenderAboutComponent();
+  loadUserPrefs();
 }
 
-export function bindCustomSelects() {
-  document.querySelectorAll('.qr-custom-select-wrap').forEach((wrap) => {
+export function bindCustomSelects(rootEl = document, onSelectChange = null) {
+  const scope = rootEl || document;
+  scope.querySelectorAll('.qr-custom-select-wrap').forEach((wrap) => {
+    if (wrap.dataset.qrSelectBound === '1') return;
+    wrap.dataset.qrSelectBound = '1';
+
     const trigger = wrap.querySelector('.qr-custom-select-trigger');
     const dropdown = wrap.querySelector('.qr-custom-dropdown');
     const valSpan = wrap.querySelector('.qr-custom-val');
@@ -238,14 +294,21 @@ export function bindCustomSelects() {
         option.classList.add('selected');
         wrap.classList.remove('active');
 
-        updateConfigFromUI();
+        if (typeof onSelectChange === 'function') {
+          onSelectChange();
+        } else {
+          updateConfigFromUI();
+        }
       };
     });
   });
 
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.qr-custom-select-wrap').forEach((w) => w.classList.remove('active'));
-  });
+  if (!docSelectBound) {
+    docSelectBound = true;
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.qr-custom-select-wrap').forEach((w) => w.classList.remove('active'));
+    });
+  }
 }
 
 export function buildCustomSelectHTML(id, options, defaultVal, extraStyle = '') {
@@ -428,7 +491,7 @@ export function renderMainViewComponent() {
         <span class="qr-chip" data-type="doc">文档</span>
         <span class="qr-chip" data-type="dir">文件夹</span>
       </div>
-      <div style="display: flex; gap: 8px; align-items: center;">
+      <div class="qr-filter-controls">
         <div style="display: flex; align-items: center; gap: 4px;">
           <label style="font-size: 11px; color: #a1a1aa; white-space: nowrap;">排序:</label>
           ${sortBySelectHtml}
@@ -438,14 +501,14 @@ export function renderMainViewComponent() {
           <input type="checkbox" id="qrIncludeSubDirs"> 递归子目录
         </label>
 
-        <div class="qr-search-scope-group" id="qrSearchScopeGroup" title="切换“当前目录即时过滤”与“跨目录全盘检索”">
-          <button type="button" class="qr-seg-btn active" data-scope="local">当前过滤</button>
-          <button type="button" class="qr-seg-btn" data-scope="cloud">全盘搜索</button>
-        </div>
-
-        <input type="text" id="qrKeywordInput" class="qr-input" placeholder="过滤文件名..." style="padding: 2px 6px; font-size: 11px; width: 118px; height: 26px; flex: none;">
-        <button type="button" id="qrCloudSearchBtn" class="qr-btn-tool qr-btn-blue hidden" style="height: 26px; padding: 0 8px; font-size: 11px;" title="提交关键词在全盘范围搜索">${ICONS.search} 搜全盘</button>
+        <input type="text" id="qrKeywordInput" class="qr-input" placeholder="过滤当前文件名..." style="padding: 2px 8px; font-size: 11px; width: 140px; height: 26px; flex: none;">
+        <button type="button" id="qrJumpGlobalBtn" class="qr-btn-tool qr-btn-blue" style="height: 26px; padding: 0 8px; font-size: 11px;" title="跳转到「全局搜改」独立页签检索全盘并跨目录重命名">${ICONS.globe} 全局搜改 ➔</button>
       </div>
+    </div>
+
+    <div id="qrDirTruncateBar" class="qr-truncate-banner hidden">
+      <span id="qrDirTruncateText"></span>
+      <button type="button" id="qrLoadMoreDirBtn" class="qr-btn-tool qr-btn-blue" style="height: 22px; padding: 0 8px; font-size: 11px;">${ICONS.refresh} 继续加载更多</button>
     </div>
 
     <div class="qr-table-wrap">
@@ -620,7 +683,20 @@ export async function loadAndRenderAboutComponent() {
   `;
 }
 
-export function switchPageView(pageId) {
+export function navigateToDirectory(fid, crumbs) {
+  state.mainMode = 'dir';
+  state.pdir_fid = String(fid || '0');
+  state.breadcrumbs = Array.isArray(crumbs) && crumbs.length > 0 ? crumbs : [{ fid: '0', name: '全部文件' }];
+
+  const fidInput = document.getElementById('qrFidInput');
+  if (fidInput) fidInput.value = state.pdir_fid;
+
+  switchPageView('main', { skipAutoFetch: true });
+  renderBreadcrumbs();
+  fetchFileList();
+}
+
+export function switchPageView(pageId, { skipAutoFetch = false } = {}) {
   state.currentView = pageId;
 
   document.querySelectorAll('.qr-nav-item[data-view]').forEach((btn) => {
@@ -632,6 +708,7 @@ export function switchPageView(pageId) {
   });
 
   document.getElementById('viewMain').classList.toggle('hidden', pageId !== 'main');
+  document.getElementById('viewGlobal').classList.toggle('hidden', pageId !== 'global');
   document.getElementById('viewShares').classList.toggle('hidden', pageId !== 'shares');
   document.getElementById('viewCsv').classList.toggle('hidden', pageId !== 'csv');
   document.getElementById('viewTools').classList.toggle('hidden', pageId !== 'tools');
@@ -640,12 +717,14 @@ export function switchPageView(pageId) {
 
   const footerEl = document.querySelector('#qrModalOverlay .qr-footer');
   if (footerEl) {
-    footerEl.style.display = pageId === 'shares' ? 'none' : 'flex';
+    footerEl.style.display = pageId === 'shares' || pageId === 'global' ? 'none' : 'flex';
   }
 
-  if (pageId === 'shares') {
+  if (pageId === 'global') {
+    onEnterGlobalView();
+  } else if (pageId === 'shares') {
     onEnterSharesView();
-  } else if (pageId === 'main' && state.fileList.length === 0) {
+  } else if (pageId === 'main' && !skipAutoFetch && state.fileList.length === 0) {
     fetchFileList();
   } else if (pageId === 'tools') {
     refreshToolsView();
@@ -713,6 +792,32 @@ export function renderBreadcrumbs() {
   });
 }
 
+function renderMainStatusCellHtml(file) {
+  const isChanged = file.new_name !== file.file_name;
+  if (file._regexError) {
+    return `<span class="qr-status-badge qr-status-err" title="${escapeHtml(file._regexError)}">正则无效</span>`;
+  }
+  if (file._renameError) {
+    return `
+      <div class="qr-status-cell-stack">
+        <span class="qr-status-badge qr-status-err" title="${escapeHtml(file._renameError)}">${escapeHtml(file._renameError)}</span>
+        ${
+          isChanged
+            ? `<button type="button" class="qr-btn-tool qr-btn-green qr-single-save-btn" data-fid="${escapeHtml(file.fid)}" style="height: 22px; padding: 0 6px; font-size: 11px; white-space: nowrap;" title="重试保存此文件">✓ 重试</button>`
+            : ''
+        }
+      </div>
+    `;
+  }
+  if (isChanged) {
+    return `<div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
+         <span class="qr-status-badge qr-status-ready">待更新</span>
+         <button type="button" class="qr-btn-tool qr-btn-green qr-single-save-btn" data-fid="${escapeHtml(file.fid)}" style="height: 22px; padding: 0 6px; font-size: 11px; white-space: nowrap;" title="仅保存此文件的修改">✓ 保存</button>
+       </div>`;
+  }
+  return `<span class="qr-status-badge qr-status-idle">未变动</span>`;
+}
+
 export function renderTable() {
   const tbody = document.getElementById('qrTableBody');
   const visibleFiles = state.fileList.filter((f) => f.visible);
@@ -728,13 +833,7 @@ export function renderTable() {
 
   tbody.innerHTML = visibleFiles
     .map((file) => {
-      const isChanged = file.new_name !== file.file_name;
-      const statusHtml = isChanged
-        ? `<div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-             <span class="qr-status-badge" style="color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap;">待更新</span>
-             <button class="qr-btn-tool qr-btn-green qr-single-save-btn" data-fid="${file.fid}" style="height: 22px; padding: 0 6px; font-size: 11px; white-space: nowrap;" title="仅保存此文件的修改">✓ 保存</button>
-           </div>`
-        : `<span class="qr-status-badge" style="color: #71717a; white-space: nowrap;">未变动</span>`;
+      const statusHtml = renderMainStatusCellHtml(file);
 
       let fileNameHtml = escapeHtml(file.file_name);
       if (file.is_dir) {
@@ -762,7 +861,13 @@ export function renderTable() {
     cb.addEventListener('change', (e) => {
       const fid = e.target.dataset.fid;
       const file = state.fileList.find((f) => f.fid === fid);
-      if (file) file.selected = e.target.checked;
+      if (file) {
+        file.selected = e.target.checked;
+        if (state.activeTab === 'numbering') {
+          recalculateNewNames();
+          return;
+        }
+      }
       updateStatText();
     });
   });
@@ -774,21 +879,16 @@ export function renderTable() {
       if (file) {
         file.new_name = e.target.value;
         file.selected = true;
+        file._renameError = '';
+        file._regexError = '';
         const row = e.target.closest('tr');
         if (row) {
           const cb = row.querySelector('.qr-file-cb');
           if (cb) cb.checked = true;
 
-          const isChanged = file.new_name !== file.file_name;
           const statusTd = row.querySelector('.qr-status-td');
           if (statusTd) {
-            statusTd.innerHTML = isChanged
-              ? `<div style="display: flex; align-items: center; gap: 6px; white-space: nowrap;">
-                   <span class="qr-status-badge" style="color: #22c55e; background: rgba(34, 197, 94, 0.1); padding: 2px 6px; border-radius: 4px; font-size: 11px; white-space: nowrap;">待更新</span>
-                   <button class="qr-btn-tool qr-btn-green qr-single-save-btn" data-fid="${file.fid}" style="height: 22px; padding: 0 6px; font-size: 11px; white-space: nowrap;" title="仅保存此文件的修改">✓ 保存</button>
-                 </div>`
-              : `<span class="qr-status-badge" style="color: #71717a; white-space: nowrap;">未变动</span>`;
-
+            statusTd.innerHTML = renderMainStatusCellHtml(file);
             const saveBtn = statusTd.querySelector('.qr-single-save-btn');
             if (saveBtn) {
               saveBtn.onclick = () => runSingleRename(file);
@@ -821,11 +921,9 @@ export function renderTable() {
           { fid: '0', name: '全部文件' },
           { fid, name: dirName }
         ];
-        if (state.searchScope === 'local') {
-          state.searchKeyword = '';
-          const kwInput = document.getElementById('qrKeywordInput');
-          if (kwInput) kwInput.value = '';
-        }
+        state.searchKeyword = '';
+        const kwInput = document.getElementById('qrKeywordInput');
+        if (kwInput) kwInput.value = '';
       } else {
         state.breadcrumbs.push({ fid, name: dirName });
       }
@@ -877,6 +975,21 @@ export function updateStatText() {
   if (selectAllCb) {
     selectAllCb.checked = visibleFiles.length > 0 && totalSelected === visibleFiles.length;
     selectAllCb.indeterminate = totalSelected > 0 && totalSelected < visibleFiles.length;
+  }
+
+  const truncBar = document.getElementById('qrDirTruncateBar');
+  const truncText = document.getElementById('qrDirTruncateText');
+  const loadMoreDirBtn = document.getElementById('qrLoadMoreDirBtn');
+  if (truncBar) {
+    const showTrunc = state.mainMode === 'dir' && (state.dirTruncated || state.dirHasMore);
+    truncBar.classList.toggle('hidden', !showTrunc);
+    if (showTrunc && truncText) {
+      const totalInfo = state.dirTotal > state.fileList.length ? ` / 共 ${state.dirTotal} 项` : '';
+      truncText.textContent = `当前目录项目较多，已加载 ${state.fileList.length} 项${totalInfo}（列表已分段保护）`;
+    }
+    if (loadMoreDirBtn) {
+      loadMoreDirBtn.classList.toggle('hidden', !state.dirHasMore);
+    }
   }
 }
 
@@ -952,21 +1065,9 @@ export function bindEvents() {
   const startBtn = document.getElementById('qrStartBtn');
   const accountPill = document.getElementById('qrAccountPill');
   const kwInput = document.getElementById('qrKeywordInput');
-  const cloudSearchBtn = document.getElementById('qrCloudSearchBtn');
-
-  async function triggerCloudSearch() {
-    const q = kwInput ? kwInput.value.trim() : '';
-    if (!q) {
-      toast('请输入全盘搜索关键词', 'info');
-      if (kwInput) kwInput.focus();
-      return;
-    }
-    state.mainMode = 'search';
-    state.searchQuery = q;
-    renderBreadcrumbs();
-    await searchDriveFiles(q);
-    renderBreadcrumbs();
-  }
+  const jumpGlobalBtn = document.getElementById('qrJumpGlobalBtn');
+  const loadMoreDirBtn = document.getElementById('qrLoadMoreDirBtn');
+  const delayInput = document.getElementById('qrDelayInput');
 
   closeBtn.addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => {
@@ -1043,30 +1144,36 @@ export function bindEvents() {
     downloadLinksBtn.addEventListener('click', runExtractDownloadLinks);
   }
 
-  document.querySelectorAll('#qrSearchScopeGroup .qr-seg-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const scope = btn.dataset.scope === 'cloud' ? 'cloud' : 'local';
-      state.searchScope = scope;
-      document.querySelectorAll('#qrSearchScopeGroup .qr-seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
-      if (cloudSearchBtn) cloudSearchBtn.classList.toggle('hidden', scope !== 'cloud');
-      if (kwInput) {
-        kwInput.placeholder = scope === 'cloud' ? '全盘搜索 + 回车...' : '过滤文件名...';
-      }
-      updateConfigFromUI();
-      if (kwInput) kwInput.focus();
+  if (jumpGlobalBtn) {
+    jumpGlobalBtn.addEventListener('click', () => {
+      openGlobalSearchWithKeyword(kwInput ? kwInput.value : '');
     });
-  });
-
-  if (cloudSearchBtn) {
-    cloudSearchBtn.addEventListener('click', triggerCloudSearch);
   }
 
-  if (kwInput) {
-    kwInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && state.searchScope === 'cloud') {
-        e.preventDefault();
-        triggerCloudSearch();
+  if (loadMoreDirBtn) {
+    loadMoreDirBtn.addEventListener('click', async () => {
+      loadMoreDirBtn.disabled = true;
+      loadMoreDirBtn.innerHTML = `${ICONS.refresh} 加载中...`;
+      try {
+        const added = await loadMoreCurrentDirectory();
+        toast(added > 0 ? `已追加加载 ${added} 项文件` : '已全部加载完毕');
+      } catch (err) {
+        customAlert('加载失败', err.message || '分页加载异常');
+      } finally {
+        loadMoreDirBtn.disabled = false;
+        loadMoreDirBtn.innerHTML = `${ICONS.refresh} 继续加载更多`;
       }
+    });
+  }
+
+  if (delayInput) {
+    delayInput.addEventListener('change', () => {
+      const val = Math.max(100, Math.min(3000, parseInt(delayInput.value, 10) || 500));
+      state.delayMs = val;
+      delayInput.value = String(val);
+      const gDelay = document.getElementById('qrGlobalDelayInput');
+      if (gDelay) gDelay.value = String(val);
+      persistUserPrefs();
     });
   }
 
@@ -1134,7 +1241,7 @@ export function bindEvents() {
   });
 
   // 初始化手写自定义 Select 下拉框组件
-  bindCustomSelects();
+  bindCustomSelects(document.getElementById('viewMain'), updateConfigFromUI);
 
   document.querySelectorAll('#viewMain .qr-type-filters .qr-chip').forEach((chip) => {
     chip.addEventListener('click', (e) => {
@@ -1150,24 +1257,74 @@ export function bindEvents() {
     state.fileList.forEach((file) => {
       if (file.visible) file.selected = checked;
     });
-    renderTable();
+    if (state.activeTab === 'numbering') {
+      recalculateNewNames();
+    } else {
+      renderTable();
+    }
   });
 
   startBtn.addEventListener('click', runBatchRename);
 
   const moveBtn = document.getElementById('qrMoveBtn');
   if (moveBtn) {
-    moveBtn.addEventListener('click', runBatchMove);
+    moveBtn.addEventListener('click', () => runBatchMove());
   }
 
   const deleteBtn = document.getElementById('qrDeleteBtn');
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', runBatchDelete);
+    deleteBtn.addEventListener('click', () => runBatchDelete());
   }
 
-  // 绑定工具箱与我的分享页签事件
+  // 绑定工具箱、我的分享、全局搜改页签事件
+  bindGlobalEvents();
   bindToolsEvents();
   bindSharesEvents();
+
+  // 全局快捷键：Ctrl/Cmd + K 或 / 聚焦搜索框；Escape 分层关闭主面板
+  if (!globalKeyBound) {
+    globalKeyBound = true;
+    document.addEventListener('keydown', (e) => {
+      const modalOverlay = document.getElementById('qrModalOverlay');
+      if (!modalOverlay || !modalOverlay.classList.contains('active')) return;
+
+      const activeTag = document.activeElement?.tagName?.toLowerCase();
+      const isEditing =
+        activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const targetId =
+          state.currentView === 'global' ? 'qrGlobalQueryInput' : state.currentView === 'shares' ? 'qrShareKeywordInput' : 'qrKeywordInput';
+        const inputEl = document.getElementById(targetId);
+        if (inputEl) {
+          inputEl.focus();
+          inputEl.select();
+        }
+        return;
+      }
+
+      if (e.key === '/' && !isEditing && !document.querySelector('.qr-dialog-overlay')) {
+        e.preventDefault();
+        const targetId =
+          state.currentView === 'global' ? 'qrGlobalQueryInput' : state.currentView === 'shares' ? 'qrShareKeywordInput' : 'qrKeywordInput';
+        const inputEl = document.getElementById(targetId);
+        if (inputEl) inputEl.focus();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        if (
+          document.querySelector('.qr-system-dialog-overlay') ||
+          document.querySelector('.qr-subdialog-overlay') ||
+          document.querySelector('.qr-dialog-overlay')
+        ) {
+          return;
+        }
+        closeModal();
+      }
+    });
+  }
 
   chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action === 'TOGGLE_RENAME_PANEL') {

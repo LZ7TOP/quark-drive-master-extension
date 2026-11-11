@@ -1,7 +1,7 @@
 {
   "name": "quark-drive-master-extension",
-  "version": "3.5.0",
-  "description": "专为夸克网盘打造的全能自动化管理助手，支持批量重命名、全盘搜索与批量移动、分享创建/包内浏览/批量转存与取消、直链提取与Aria2导出、账号容量监控及一键撤销。",
+  "version": "3.6.0",
+  "description": "专为夸克网盘打造的全能自动化管理助手，支持独立全局搜改、批量重命名、大体积文件扫描清理、分享全生命周期管理、直链提取与Aria2导出、账号容量监控及一键撤销。",
   "main": "src/background/index.js",
   "scripts": {
     "check": "node scripts/verify-versions.js",

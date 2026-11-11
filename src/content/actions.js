@@ -18,7 +18,7 @@ import {
   searchDriveFiles
 } from './api.js';
 import { saveHistorySnapshot } from './history.js';
-import { recalculateNewNames } from './rename.js';
+import { recalculateNewNames, validateRenameTargets } from './rename.js';
 import { openFolderPickerModal } from './picker.js';
 import { refreshAccountQuotaUI, renderBreadcrumbs, renderTable, updateStatText } from './ui.js';
 
@@ -29,10 +29,22 @@ function reloadMainViewList() {
   return fetchFileList();
 }
 
-export async function runSingleRename(file) {
+export async function runSingleRename(file, { sourceLabel = '主面板改名', siblingPool = state.fileList, onAfterRename } = {}) {
   if (!file || file.new_name === file.file_name) return;
   if (state.isRunning) {
     customAlert('提示', '已有任务正在执行中，请等待当前任务完成后再操作。');
+    return;
+  }
+
+  const { invalidItems } = validateRenameTargets([file], siblingPool);
+  if (invalidItems.length > 0) {
+    if (typeof onAfterRename === 'function') {
+      onAfterRename(false);
+    } else {
+      renderTable();
+      updateStatText();
+    }
+    customAlert('命名校验失败', invalidItems[0].reason);
     return;
   }
 
@@ -41,19 +53,47 @@ export async function runSingleRename(file) {
   try {
     const res = await requestRename(file.fid, file.new_name);
     if (isQuarkOk(res)) {
-      saveHistorySnapshot([{ fid: file.fid, old_name: file.file_name, new_name: file.new_name }]);
+      saveHistorySnapshot([{ fid: file.fid, old_name: file.file_name, new_name: file.new_name }], sourceLabel);
       log(`修改成功: [${file.file_name}] 已成功重命名为 [${file.new_name}]！`);
       const oldName = file.file_name;
       file.file_name = file.new_name;
-      renderTable();
-      updateStatText();
-      toast(`已成功将 "${oldName}" 重命名为 "${file.new_name}"`);
+      file._renameError = '';
+
+      // 同步更新另一视图中的同 FID 项
+      [state.fileList, state.globalSearch.items].forEach((pool) => {
+        const peer = pool.find((x) => x !== file && String(x.fid) === String(file.fid));
+        if (peer) {
+          peer.file_name = file.file_name;
+          peer.new_name = file.file_name;
+          peer._renameError = '';
+        }
+      });
+
+      if (typeof onAfterRename === 'function') {
+        onAfterRename(true);
+      } else {
+        renderTable();
+        updateStatText();
+      }
+      toast(`已成功将 "${oldName}" 重命名为 "${file.file_name}"`);
     } else {
       const msg = friendlyErrorMessage(res);
+      file._renameError = msg;
+      if (typeof onAfterRename === 'function') {
+        onAfterRename(false);
+      } else {
+        renderTable();
+      }
       log(`修改失败: ${msg}`);
       customAlert('修改失败', msg);
     }
   } catch (err) {
+    file._renameError = err.message || '请求异常';
+    if (typeof onAfterRename === 'function') {
+      onAfterRename(false);
+    } else {
+      renderTable();
+    }
     log(`修改捕获异常: ${err.message}`);
     customAlert('异常', err.message);
   } finally {
@@ -61,79 +101,176 @@ export async function runSingleRename(file) {
   }
 }
 
-export async function runBatchRename() {
-  if (state.isRunning) return;
-
-  const targets = state.fileList.filter((f) => f.visible && f.selected && f.new_name !== f.file_name);
-
-  if (targets.length === 0) {
-    customAlert('提示', '没有选中的可改名文件（已选文件的新旧名称完全相同）。');
+export function executeBatchRenameTargets(
+  rawTargets,
+  siblingPool,
+  {
+    delayMs = state.delayMs || 500,
+    sourceLabel = '主面板改名',
+    logFn = log,
+    logBoxEl = null,
+    progressWrapEl = null,
+    progressInnerEl = null,
+    startBtnEl = null,
+    startBtnDefaultHtml = `${ICONS.zap} 开始批量重命名`,
+    onValidationUpdate = null,
+    onComplete = null
+  } = {}
+) {
+  if (state.isRunning) {
+    customAlert('提示', '当前已有批量任务正在执行，请等待完成后再试。');
     return;
   }
 
-  customConfirm('确认重命名', `确认要将选中的 ${targets.length} 个项目重命名吗？`, async (confirmed) => {
+  const targets = Array.isArray(rawTargets) ? rawTargets.filter((f) => f && f.new_name !== f.file_name) : [];
+  if (targets.length === 0) {
+    customAlert('提示', '没有选中的可改名项目（已选项目的新旧名称完全相同）。');
+    return;
+  }
+
+  const { validTargets, invalidItems } = validateRenameTargets(targets, siblingPool);
+  if (typeof onValidationUpdate === 'function') {
+    onValidationUpdate();
+  }
+
+  if (validTargets.length === 0) {
+    const preview = invalidItems
+      .slice(0, 5)
+      .map((it) => `• ${it.file.file_name}: ${it.reason}`)
+      .join('\n');
+    const extra = invalidItems.length > 5 ? `\n... 等共 ${invalidItems.length} 项异常` : '';
+    customAlert('重命名校验未通过', `所选项目均存在命名不合法或同名冲突，请根据表格状态列红字提示调整：\n${preview}${extra}`);
+    return;
+  }
+
+  const confirmText =
+    invalidItems.length > 0
+      ? `检测到 ${invalidItems.length} 项存在非法字符或同目录重名冲突（已在列表标红跳过）。\n确认将剩余合法的 ${validTargets.length} 个项目执行重命名吗？`
+      : `确认要将选中的 ${validTargets.length} 个项目重命名吗？`;
+
+  customConfirm('确认重命名', confirmText, async (confirmed) => {
     if (!confirmed) return;
 
     state.isRunning = true;
-    const startBtn = document.getElementById('qrStartBtn');
-    const delayInput = document.getElementById('qrDelayInput');
-    const logBox = document.getElementById('qrLogBox');
-    const progressWrap = document.getElementById('qrProgressBarWrap');
-    const progressInner = document.getElementById('qrProgressBarInner');
-
-    state.delayMs = parseInt(delayInput.value, 10) || 500;
-    startBtn.disabled = true;
-    startBtn.innerHTML = `${ICONS.zap} 重命名执行中...`;
-    logBox.style.display = 'block';
-    progressWrap.style.display = 'block';
-    logBox.innerHTML = '';
+    const safeDelay = Math.max(100, parseInt(delayMs, 10) || 500);
+    if (startBtnEl) {
+      startBtnEl.disabled = true;
+      startBtnEl.innerHTML = `${ICONS.zap} 重命名执行中...`;
+    }
+    if (logBoxEl) {
+      logBoxEl.style.display = 'block';
+      logBoxEl.innerHTML = '';
+    }
+    if (progressWrapEl) progressWrapEl.style.display = 'block';
+    if (progressInnerEl) progressInnerEl.style.width = '0%';
 
     let successCount = 0;
     let failCount = 0;
     const historyItems = [];
+    const renamedMap = new Map();
 
-    for (let i = 0; i < targets.length; i++) {
-      const file = targets[i];
-      const percent = Math.round(((i + 1) / targets.length) * 100);
-      progressInner.style.width = `${percent}%`;
+    for (let i = 0; i < validTargets.length; i++) {
+      const file = validTargets[i];
+      if (progressInnerEl) {
+        progressInnerEl.style.width = `${Math.round(((i + 1) / validTargets.length) * 100)}%`;
+      }
 
-      log(`[${i + 1}/${targets.length}] 改名中: ${file.file_name} -> ${file.new_name}`);
+      logFn(`[${i + 1}/${validTargets.length}] 改名中: ${file.file_name} -> ${file.new_name}`);
 
       try {
         const result = await requestRename(file.fid, file.new_name);
         if (isQuarkOk(result)) {
           successCount++;
+          file._renameError = '';
           historyItems.push({
             fid: file.fid,
             old_name: file.file_name,
             new_name: file.new_name
           });
           file.file_name = file.new_name;
-          log(`  改名成功`);
+          renamedMap.set(String(file.fid), file.new_name);
+          logFn(`  改名成功`);
         } else {
+          const msg = friendlyErrorMessage(result);
+          file._renameError = msg;
           failCount++;
-          log(`  失败: ${friendlyErrorMessage(result)}`);
+          logFn(`  失败: ${msg}`);
         }
       } catch (err) {
+        const msg = err.message || '请求异常';
+        file._renameError = msg;
         failCount++;
-        log(`  异常: ${err.message}`);
+        logFn(`  异常: ${msg}`);
       }
 
-      if (i < targets.length - 1) {
-        await new Promise((resolve) => setTimeout(resolve, state.delayMs));
+      if (i < validTargets.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, safeDelay));
       }
     }
 
-    log(`执行完成！成功: ${successCount} 个，失败: ${failCount} 个`);
-    startBtn.disabled = false;
-    startBtn.innerHTML = `${ICONS.zap} 开始批量重命名`;
+    logFn(`执行完成！成功: ${successCount} 个，失败: ${failCount} 个`);
+    if (startBtnEl) {
+      startBtnEl.disabled = false;
+      startBtnEl.innerHTML = startBtnDefaultHtml;
+    }
     state.isRunning = false;
 
     if (historyItems.length > 0) {
-      saveHistorySnapshot(historyItems);
+      saveHistorySnapshot(historyItems, sourceLabel);
+      // 跨视图内存列表同步已成功改名的文件名
+      [state.fileList, state.globalSearch.items].forEach((pool) => {
+        pool.forEach((f) => {
+          const nextName = renamedMap.get(String(f.fid));
+          if (nextName) {
+            f.file_name = nextName;
+            f.new_name = nextName;
+            f._renameError = '';
+          }
+        });
+      });
     }
 
-    recalculateNewNames();
+    if (typeof onComplete === 'function') {
+      onComplete({ successCount, failCount, invalidCount: invalidItems.length });
+    }
+
+    if (failCount === 0 && invalidItems.length === 0) {
+      toast(`批量重命名完成：成功 ${successCount} 项`);
+    } else {
+      toast(`重命名结束：成功 ${successCount} 项，失败/跳过 ${failCount + invalidItems.length} 项`, 'info');
+    }
+  });
+}
+
+export async function runBatchRename() {
+  if (state.isRunning) return;
+
+  const targets = state.fileList.filter((f) => f.visible && f.selected && f.new_name !== f.file_name);
+  const startBtn = document.getElementById('qrStartBtn');
+  const delayInput = document.getElementById('qrDelayInput');
+  const logBox = document.getElementById('qrLogBox');
+  const progressWrap = document.getElementById('qrProgressBarWrap');
+  const progressInner = document.getElementById('qrProgressBarInner');
+
+  state.delayMs = parseInt(delayInput?.value, 10) || state.delayMs || 500;
+
+  executeBatchRenameTargets(targets, state.fileList, {
+    delayMs: state.delayMs,
+    sourceLabel: '主面板改名',
+    logFn: log,
+    logBoxEl: logBox,
+    progressWrapEl: progressWrap,
+    progressInnerEl: progressInner,
+    startBtnEl: startBtn,
+    startBtnDefaultHtml: `${ICONS.zap} 开始批量重命名`,
+    onValidationUpdate: () => {
+      renderTable();
+      updateStatText();
+    },
+    onComplete: () => {
+      renderTable();
+      updateStatText();
+    }
   });
 }
 
@@ -164,12 +301,13 @@ export function promptCreateDirectory() {
   });
 }
 
-export async function runBatchDelete() {
+export async function runBatchDelete(customFiles = null, { onCompleted } = {}) {
   if (state.isRunning) return;
 
-  const selectedFiles = state.fileList.filter((f) => f.visible && f.selected);
+  const isCustom = Array.isArray(customFiles);
+  const selectedFiles = isCustom ? customFiles.filter((f) => f && f.fid) : state.fileList.filter((f) => f.visible && f.selected);
   if (selectedFiles.length === 0) {
-    customAlert('提示', '请先在表格列表中勾选需要删除的文件或文件夹。');
+    customAlert('提示', '请先在列表中勾选需要删除的文件或文件夹。');
     return;
   }
 
@@ -189,20 +327,36 @@ export async function runBatchDelete() {
     log(`正在发起批量删除 ${selectedFiles.length} 个文件...`);
 
     try {
-      const res = await requestDeleteFiles(fids);
-      if (isQuarkOk(res)) {
-        log(`批量删除成功: 共删除 ${selectedFiles.length} 项文件！`);
-        toast(`已成功将 ${selectedFiles.length} 个文件/文件夹移入夸克回收站`);
-        reloadMainViewList();
-        requestAccountQuota().then(() => refreshAccountQuotaUI());
-      } else {
-        const msg = friendlyErrorMessage(res);
-        log(`批量删除失败: ${msg}`);
-        customAlert('删除失败', msg);
+      const BATCH_SIZE = 80;
+      for (let i = 0; i < fids.length; i += BATCH_SIZE) {
+        const chunk = fids.slice(i, i + BATCH_SIZE);
+        const res = await requestDeleteFiles(chunk);
+        if (!isQuarkOk(res)) {
+          throw new Error(friendlyErrorMessage(res));
+        }
       }
+
+      const deletedSet = new Set(fids.map(String));
+      state.fileList = state.fileList.filter((f) => !deletedSet.has(String(f.fid)));
+      state.globalSearch.items = state.globalSearch.items.filter((f) => !deletedSet.has(String(f.fid)));
+
+      log(`批量删除成功: 共删除 ${selectedFiles.length} 项文件！`);
+      toast(`已成功将 ${selectedFiles.length} 个文件/文件夹移入夸克回收站`);
+
+      if (typeof onCompleted === 'function') {
+        onCompleted(fids);
+      } else if (!isCustom) {
+        reloadMainViewList();
+      } else {
+        renderTable();
+      }
+
+      window.dispatchEvent(new CustomEvent('qr-files-mutated', { detail: { type: 'delete', fids } }));
+      requestAccountQuota().then(() => refreshAccountQuotaUI());
     } catch (err) {
-      log(`批量删除捕获异常: ${err.message}`);
-      customAlert('异常', err.message);
+      const msg = err.message || '批量删除失败';
+      log(`批量删除失败: ${msg}`);
+      customAlert('删除失败', msg);
     } finally {
       state.isRunning = false;
       if (moveBtn) moveBtn.disabled = false;
@@ -212,12 +366,13 @@ export async function runBatchDelete() {
   });
 }
 
-export function runBatchMove() {
+export function runBatchMove(customFiles = null, { onCompleted } = {}) {
   if (state.isRunning) return;
 
-  const selectedFiles = state.fileList.filter((f) => f.visible && f.selected);
+  const isCustom = Array.isArray(customFiles);
+  const selectedFiles = isCustom ? customFiles.filter(Boolean) : state.fileList.filter((f) => f.visible && f.selected);
   if (selectedFiles.length === 0) {
-    customAlert('提示', '请先在表格列表中勾选需要移动的文件或文件夹。');
+    customAlert('提示', '请先在列表中勾选需要移动的文件或文件夹。');
     return;
   }
 
@@ -228,8 +383,8 @@ export function runBatchMove() {
   }
 
   const excludedFids = validFiles.filter((f) => f.is_dir).map((f) => f.fid);
-  const initialFid = state.mainMode === 'dir' ? state.pdir_fid || '0' : '0';
-  const initialBreadcrumbs = state.mainMode === 'dir' ? state.breadcrumbs : [{ fid: '0', name: '全部文件' }];
+  const initialFid = !isCustom && state.mainMode === 'dir' ? state.pdir_fid || '0' : '0';
+  const initialBreadcrumbs = !isCustom && state.mainMode === 'dir' ? state.breadcrumbs : [{ fid: '0', name: '全部文件' }];
 
   openFolderPickerModal({
     title: `批量移动已选的 ${validFiles.length} 个项目到...`,
@@ -259,8 +414,10 @@ export function runBatchMove() {
         if (moveBtn) moveBtn.disabled = true;
         if (deleteBtn) deleteBtn.disabled = true;
         if (startBtn) startBtn.disabled = true;
-        if (logBox) logBox.style.display = 'block';
-        if (progressWrap) progressWrap.style.display = 'block';
+        if (!isCustom) {
+          if (logBox) logBox.style.display = 'block';
+          if (progressWrap) progressWrap.style.display = 'block';
+        }
 
         const fids = validFiles.map((f) => f.fid);
         const BATCH_SIZE = 80;
@@ -272,7 +429,7 @@ export function runBatchMove() {
         try {
           for (let i = 0; i < totalBatches; i++) {
             const chunk = fids.slice(i * BATCH_SIZE, (i + 1) * BATCH_SIZE);
-            if (progressInner) {
+            if (!isCustom && progressInner) {
               progressInner.style.width = `${Math.round(((i + 1) / totalBatches) * 100)}%`;
             }
 
@@ -287,14 +444,28 @@ export function runBatchMove() {
             }
           }
 
+          const movedSet = new Set(fids.map(String));
+          state.globalSearch.items.forEach((f) => {
+            if (movedSet.has(String(f.fid))) {
+              f.pdir_fid = String(targetFid);
+            }
+          });
+
           log(`批量移动完成: 共移动 ${movedCount} 个项目至「${pathLabel}」`);
           toast(`已将 ${movedCount} 个项目移动到「${pathLabel}」`);
-          reloadMainViewList();
+
+          if (typeof onCompleted === 'function') {
+            onCompleted(fids, targetFid);
+          } else if (!isCustom) {
+            reloadMainViewList();
+          }
+
+          window.dispatchEvent(new CustomEvent('qr-files-mutated', { detail: { type: 'move', fids, toPdirFid: targetFid } }));
         } catch (err) {
           const msg = err.message || '移动请求失败';
           log(`批量移动失败: ${msg}`);
           customAlert('移动失败', movedCount > 0 ? `已移动 ${movedCount} 项，后续批次中断：${msg}` : msg);
-          if (movedCount > 0) reloadMainViewList();
+          if (movedCount > 0 && !isCustom) reloadMainViewList();
         } finally {
           state.isRunning = false;
           if (moveBtn) moveBtn.disabled = false;
@@ -320,15 +491,16 @@ export function buildAria2TaskText(items) {
     .join('\n\n');
 }
 
-export async function runExtractDownloadLinks() {
+export async function runExtractDownloadLinks(customFiles = null) {
   if (state.isRunning) {
     customAlert('提示', '当前已有任务正在执行中，请等待完成后再提取直链。');
     return;
   }
 
-  const selectedVisible = state.fileList.filter((f) => f.visible && f.selected);
+  const isCustom = Array.isArray(customFiles);
+  const selectedVisible = isCustom ? customFiles.filter(Boolean) : state.fileList.filter((f) => f.visible && f.selected);
   if (selectedVisible.length === 0) {
-    customAlert('提示', '请先在主面板勾选需要提取下载直链的文件。');
+    customAlert('提示', '请先在列表勾选需要提取下载直链的文件。');
     return;
   }
 

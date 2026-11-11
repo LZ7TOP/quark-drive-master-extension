@@ -4,17 +4,19 @@
 
 import { state } from './state.js';
 import { ICONS } from './constants.js';
-import { escapeHtml, log } from './utils.js';
+import { escapeHtml, friendlyErrorMessage, log } from './utils.js';
 import { customAlert, customConfirm, toast } from './dialogs.js';
-import { requestRename, fetchFileList } from './api.js';
+import { fetchFileList, isQuarkOk, requestRename } from './api.js';
+import { recalculateNewNames } from './rename.js';
 
-export function saveHistorySnapshot(items) {
+export function saveHistorySnapshot(items, sourceLabel = '主面板改名') {
   try {
     chrome.storage.local.get(['rename_history'], (res) => {
       const list = res.rename_history || [];
       const record = {
         id: 'hist_' + Date.now(),
         time: new Date().toLocaleString(),
+        sourceLabel,
         count: items.length,
         items: items
       };
@@ -29,6 +31,8 @@ export function saveHistorySnapshot(items) {
 
 export function openHistoryModal() {
   try {
+    document.querySelectorAll('.qr-dialog-overlay:not(.qr-system-dialog-overlay)').forEach((d) => d.remove());
+
     chrome.storage.local.get(['rename_history'], (res) => {
       const list = res.rename_history || [];
       let contentHtml = '';
@@ -53,15 +57,17 @@ export function openHistoryModal() {
 
             const moreText =
               rec.items && rec.items.length > 10 ? `<div class="qr-hist-more">... 更多 ${rec.items.length - 10} 个文件</div>` : '';
+            const sourceTag = rec.sourceLabel ? `<span class="qr-history-source">${escapeHtml(rec.sourceLabel)}</span>` : '';
 
             return `
             <div class="qr-history-card">
               <div class="qr-history-card-header">
                 <div class="qr-history-meta">
                   <span class="qr-history-time">${ICONS.clock} ${escapeHtml(rec.time)}</span>
+                  ${sourceTag}
                   <span class="qr-history-count">修改 ${rec.count} 项文件</span>
                 </div>
-                <button class="qr-btn-undo" data-id="${rec.id}">一键撤销此批次</button>
+                <button class="qr-btn-undo" data-id="${escapeHtml(rec.id)}">一键撤销此批次</button>
               </div>
               <div class="qr-history-card-body">
                 <table class="qr-history-table">
@@ -83,24 +89,37 @@ export function openHistoryModal() {
         <div class="qr-dialog-box qr-history-dialog-box">
           <div class="qr-dialog-title qr-history-dialog-title">
             <span class="qr-title-text">${ICONS.history} 历史改名快照记录与一键撤销</span>
-            <button class="qr-close-btn qr-dialog-close">&times;</button>
+            <button type="button" class="qr-close-btn qr-dialog-close" aria-label="关闭">&times;</button>
           </div>
           <div class="qr-dialog-content qr-history-dialog-content">
             ${contentHtml}
           </div>
           <div class="qr-dialog-actions" style="display: flex; justify-content: space-between; align-items: center;">
-            <button id="qrClearHistoryBtn" class="qr-btn-tool qr-btn-red" style="height: 28px; padding: 0 10px; font-size: 11px;" ${list.length === 0 ? 'disabled' : ''}>
+            <button type="button" id="qrClearHistoryBtn" class="qr-btn-tool qr-btn-red" style="height: 28px; padding: 0 10px; font-size: 11px;" ${list.length === 0 ? 'disabled' : ''}>
               ${ICONS.trash} 清空全部历史记录
             </button>
-            <button class="qr-btn-secondary qr-dialog-close">关闭</button>
+            <button type="button" class="qr-btn-secondary qr-dialog-close">关闭</button>
           </div>
         </div>
       `;
 
       document.body.appendChild(dialog);
 
+      const closeDialog = () => {
+        document.removeEventListener('keydown', onEsc);
+        dialog.remove();
+      };
+      const onEsc = (e) => {
+        if (e.key === 'Escape' && !document.querySelector('.qr-system-dialog-overlay')) {
+          closeDialog();
+        }
+      };
+      document.addEventListener('keydown', onEsc);
       dialog.querySelectorAll('.qr-dialog-close').forEach((btn) => {
-        btn.addEventListener('click', () => dialog.remove());
+        btn.addEventListener('click', closeDialog);
+      });
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) closeDialog();
       });
 
       const clearBtn = dialog.querySelector('#qrClearHistoryBtn');
@@ -110,6 +129,7 @@ export function openHistoryModal() {
             if (!confirmed) return;
             chrome.storage.local.set({ rename_history: [] }, () => {
               log('已成功清空全部历史修改记录！');
+              closeDialog();
               openHistoryModal();
             });
           });
@@ -121,14 +141,14 @@ export function openHistoryModal() {
           const histId = e.currentTarget.dataset.id;
           const targetRec = list.find((r) => r.id === histId);
           if (targetRec) {
-            dialog.remove();
+            closeDialog();
             runUndoHistory(targetRec);
           }
         });
       });
     });
   } catch (e) {
-    customAlert('异常', '读取历史记录失败。');
+    customAlert('异常', `读取历史记录失败: ${e.message || '存储访问异常'}`);
   }
 }
 
@@ -141,24 +161,26 @@ export async function runUndoHistory(record) {
     }
 
     const delayInput = document.getElementById('qrDelayInput');
-    const delayMs = parseInt(delayInput && delayInput.value) || 400;
+    const delayMs = Math.max(200, parseInt(delayInput?.value, 10) || state.delayMs || 400);
 
     state.isRunning = true;
     log(`开始一键撤销还原 ${record.items.length} 项文件...`);
     let success = 0;
     let fail = 0;
+    const revertedMap = new Map();
 
     for (let i = 0; i < record.items.length; i++) {
       const item = record.items[i];
       log(`[${i + 1}/${record.items.length}] 还原中: ${item.new_name} -> ${item.old_name}`);
       try {
         const res = await requestRename(item.fid, item.old_name);
-        if (res && (res.code === 0 || res.status === 200)) {
+        if (isQuarkOk(res)) {
           success++;
+          revertedMap.set(String(item.fid), item.old_name);
           log(`  还原成功`);
         } else {
           fail++;
-          log(`  还原失败: ${res.message || res.error || '未知错误'}`);
+          log(`  还原失败: ${friendlyErrorMessage(res)}`);
         }
       } catch (err) {
         fail++;
@@ -170,7 +192,28 @@ export async function runUndoHistory(record) {
     }
 
     state.isRunning = false;
-    toast(`撤销完成：成功还原 ${success} 个文件，失败 ${fail} 个`);
-    fetchFileList();
+
+    // 同步内存列表状态，避免不同页签视图被覆盖或显示过时名称
+    if (revertedMap.size > 0) {
+      [state.fileList, state.globalSearch.items].forEach((list) => {
+        list.forEach((f) => {
+          const oldName = revertedMap.get(String(f.fid));
+          if (oldName) {
+            f.file_name = oldName;
+            f.new_name = oldName;
+            f._renameError = '';
+          }
+        });
+      });
+    }
+
+    toast(`撤销完成：成功还原 ${success} 个文件，失败 ${fail} 个`, fail > 0 ? 'info' : 'success');
+
+    if (state.currentView === 'main' && state.mainMode === 'dir') {
+      fetchFileList();
+    } else {
+      recalculateNewNames();
+      window.dispatchEvent(new CustomEvent('qr-files-mutated', { detail: { type: 'undo' } }));
+    }
   });
 }
