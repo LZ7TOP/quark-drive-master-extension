@@ -88,3 +88,48 @@ export function friendlyErrorMessage(res) {
 
   return message || '操作失败';
 }
+
+export function formatSize(bytes) {
+  const n = Number(bytes) || 0;
+  if (n <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let i = 0;
+  let value = n;
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024;
+    i++;
+  }
+  return `${value.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
+}
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false
+});
+
+export function formatTimestamp(ms) {
+  const num = Number(ms);
+  if (!Number.isFinite(num) || num <= 0) return '-';
+  // 兼容秒级时间戳
+  const normalized = num < 1e12 ? num * 1000 : num;
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return '-';
+  return DATE_FORMATTER.format(date).replace(/\//g, '-');
+}
+
+export function sanitizeHttpUrl(url) {
+  if (!url) return '';
+  try {
+    const parsed = new URL(String(url).trim());
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.href;
+    }
+  } catch (e) {
+    // 非法 URL 返回空字符串
+  }
+  return '';
+}

@@ -31,5 +31,19 @@ export const state = {
     cleanUrl: true,
     cleanBracket: true,
     cleanTrad: true
+  },
+  shares: {
+    list: [],
+    source: 'none',
+    sourceLabel: '尚未加载分享列表',
+    updatedAt: 0,
+    filterStatus: 'all',
+    filterPath: 'all',
+    keyword: '',
+    sortKey: 'created_at',
+    sortDir: 'desc',
+    fetchSeq: 0,
+    isLoading: false,
+    cacheLoaded: false
   }
 };

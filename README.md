@@ -1,9 +1,9 @@
 <div align="center">
   <img src="public/icons/icon-128.png" width="100" height="100" alt="Logo" />
   <h1>夸克网盘全能管理工具 (Quark Drive Master)</h1>
-  <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 批量删除 · 快捷新建文件夹 · CSV交互 · 历史撤销 · 实用工具箱</b></p>
+  <p><b>专为夸克网盘打造的全能自动化管理助手 · 批量重命名 · 我的分享可视化 · 批量删除 · 新建文件夹 · CSV交互 · 历史撤销 · 实用工具箱</b></p>
 
-[![Extension Release](https://img.shields.io/badge/Extension-v3.3.0-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
+[![Extension Release](https://img.shields.io/badge/Extension-v3.4.0-2563EB?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![Manifest Version](https://img.shields.io/badge/Manifest-V3-34A853?logo=googlechrome&logoColor=white)](public/manifest.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Author: LZ7工作室](https://img.shields.io/badge/Author-LZ7工作室-2563EB.svg)](https://github.com/LZ7TOP)
@@ -64,15 +64,22 @@
 ### 7. 🧰 实用工具箱 (Toolbox)
 
 - **目录统计**：实时展示当前目录总项目数、文件数、文件夹数与总大小，并按类型可视化分布。
+- **子文件夹内容平铺提取**：深度扫描子目录，批量提取分散文件至当前目录并智能清理空文件夹。
 - **重复文件名检测**：一键检测同名文件，支持勾选并批量删除多余重复项。
 - **文件名规范检查**：检测空文件名、Windows 非法字符、名称超长、首尾空格等问题，支持一键自动修复。
+
+### 8. 🔗 我的分享管理与可视化分析 (My Shares)
+
+- **一键全量在线拉取**：接入夸克分享分页接口，一键同步当前账号全部「我的分享」并自动本地缓存；在「我的分享」页面唤出面板可直达该页签。
+- **多格式一键导入/导出**：支持导入本地 `JSON`、`CSV`、浏览器抓包报文（如 `请求.txt`）或带提取码的纯文本链接列表，一键导出为 `CSV` / `JSON` 或批量复制文案。
+- **可视化看板与多维检索**：展示有效/违规/部分违规/加密/过期失效 KPI、状态分布进度条与来源目录分布，支持状态切换、关键词搜索、表头点击排序与单条分享详情预览。
 
 ---
 
 ## 🛠️ 安装与使用方法
 
 1. **下载或拉取源码包**：
-   下载解压发布包 `release/quark-batch-rename-v3.3.0.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
+   下载解压发布包 `release/quark-batch-rename-v3.4.0.zip`（或前往 [GitHub Releases](https://github.com/LZ7TOP/quark-drive-master-extension/releases) 下载最新版离线包）。
 2. **打开 Chrome 扩展程序页面**：
    在浏览器地址栏输入 `chrome://extensions/`，并开启右上角的 **「开发者模式」**。
 3. **加载已解压的扩展程序**：
@@ -131,6 +138,12 @@ npm run format
 ## 📝 更新日志
 
 完整的历史版本更新明细请见 [FULL_RELEASE_NOTES.md](FULL_RELEASE_NOTES.md) 与 [public/data/changelog.json](public/data/changelog.json)，也可在插件面板的「更新日志」页签内实时查看。
+
+### v3.4.0 (2026-11-11)
+
+- 新增「我的分享」管理页签，支持一键在线分页拉取当前账号全量分享记录并自动本地缓存。
+- 支持导入 JSON / CSV 清单、浏览器抓包报文（如 `请求.txt`）或纯文本分享链接，并支持一键导出 CSV / JSON 与批量复制链接文案。
+- 内置分享可视化看板（有效/违规/部分违规/加密/过期统计、状态分布条、Top 来源目录筛选）、多维搜索排序及详情预览弹窗。
 
 ### v3.3.0 (2026-09-03)
 

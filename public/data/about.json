@@ -1,14 +1,19 @@
 {
   "project": {
     "name": "夸克网盘全能管理工具",
-    "version": "3.3.0",
+    "version": "3.4.0",
     "author": "LZ7 工作室 (LZ7 Studio)",
     "url": "https://github.com/LZ7TOP/quark-drive-master-extension",
     "releaseUrl": "https://github.com/LZ7TOP/quark-drive-master-extension/releases",
-    "description": "专为夸克网盘 Web 端打造的全能自动化管理助手，集批量重命名、行内快捷编辑、批量删除、快捷新建文件夹、子文件夹内容平铺提取（扁平化）、CSV 映射协同、历史一键撤销、文件类型过滤与智能排序于一体。",
+    "description": "专为夸克网盘 Web 端打造的全能自动化管理助手，集批量重命名、我的分享可视化管理与导入导出、行内快捷编辑、批量删除、快捷新建文件夹、子文件夹内容平铺提取（扁平化）、CSV 映射协同、历史一键撤销、文件类型过滤与智能排序于一体。",
     "license": "MIT"
   },
   "features": [
+    {
+      "icon": "share",
+      "title": "我的分享可视化管理与清单导入",
+      "desc": "一键分页拉取当前账号全量我的分享记录，支持导入本地 JSON / CSV / 抓包响应文本（如请求.txt）与纯文本分享链接；内置状态占比仪表盘、来源目录统计、多维筛选排序与详情弹窗。"
+    },
     {
       "icon": "folder",
       "title": "子文件夹内容平铺提取（目录扁平化）",

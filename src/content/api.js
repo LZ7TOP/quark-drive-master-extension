@@ -169,6 +169,53 @@ export async function requestMoveFiles(fids, toPdirFid) {
   });
 }
 
+// 夸克 API 获取当前用户分享列表（前台同源优先发包与后台代理降级双保险）
+export async function requestMySharesPage(page = 1, size = 50, filter = 'all', orderField = 'created_at', orderType = 'desc') {
+  const safePage = Math.max(1, parseInt(page, 10) || 1);
+  const safeSize = Math.min(100, Math.max(1, parseInt(size, 10) || 50));
+  const url =
+    `https://drive-pc.quark.cn/1/clouddrive/share/mypage/detail?pr=ucpro&fr=pc&uc_param_str=` +
+    `&_page=${safePage}&_size=${safeSize}` +
+    `&_order_field=${encodeURIComponent(orderField)}&_order_type=${encodeURIComponent(orderType)}` +
+    `&_fetch_total=1&_fetch_notify_follow=1&_filter=${encodeURIComponent(filter)}&_share_type=0,1`;
+
+  try {
+    const resp = await fetch(url, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    const text = await resp.text();
+    try {
+      const data = JSON.parse(text);
+      return data;
+    } catch (parseErr) {
+      console.warn('前台获取分享列表 fetch 解析非 JSON，自动降级为 Service Worker 代理');
+    }
+  } catch (e) {
+    console.warn('前台获取分享列表网络异常，自动降级到 Service Worker 后台:', e);
+  }
+
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(
+      {
+        action: 'API_FETCH_MY_SHARES',
+        page: safePage,
+        size: safeSize,
+        filter,
+        order_field: orderField,
+        order_type: orderType
+      },
+      (resp) => {
+        if (chrome.runtime.lastError || !resp || !resp.success) {
+          resolve({ code: -1, message: resp?.error || chrome.runtime.lastError?.message || '获取分享列表失败' });
+        } else {
+          resolve(resp.data);
+        }
+      }
+    );
+  });
+}
+
 // 递归扫描当前目录下的所有子文件夹及内部文件（用于子目录内容平铺提取）
 export async function scanSubdirectoryFiles(parentPdirFid) {
   const result = {

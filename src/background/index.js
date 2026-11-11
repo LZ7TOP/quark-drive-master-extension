@@ -105,5 +105,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 
+  // 后台代理 GET 我的分享列表
+  if (request.action === 'API_FETCH_MY_SHARES') {
+    const page = Math.max(1, parseInt(request.page, 10) || 1);
+    const size = Math.min(100, Math.max(1, parseInt(request.size, 10) || 50));
+    const filter = request.filter || 'all';
+    const orderField = request.order_field || 'created_at';
+    const orderType = request.order_type || 'desc';
+    const url =
+      `${API_BASE}/share/mypage/detail?${COMMON_QUERY}` +
+      `&_page=${page}&_size=${size}` +
+      `&_order_field=${encodeURIComponent(orderField)}&_order_type=${encodeURIComponent(orderType)}` +
+      `&_fetch_total=1&_fetch_notify_follow=1&_filter=${encodeURIComponent(filter)}&_share_type=0,1`;
+
+    (async () => {
+      const result = await apiFetch(url);
+      sendResponse(result);
+    })();
+    return true;
+  }
+
   return false;
 });

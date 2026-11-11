@@ -12,6 +12,7 @@ import { openHistoryModal } from './history.js';
 import { runSingleRename, runBatchRename, runBatchDelete, promptCreateDirectory } from './actions.js';
 import { customConfirm, customAlert } from './dialogs.js';
 import { renderToolsViewComponent, bindToolsEvents, refreshToolsView } from './tools.js';
+import { renderSharesViewComponent, bindSharesEvents, onEnterSharesView, fetchAllMyShares } from './shares.js';
 
 export function createFloatButton() {
   if (document.getElementById('quark-rename-float-btn')) return;
@@ -101,6 +102,7 @@ export function createModalUI() {
         <div class="qr-header-bottom">
           <div class="qr-page-nav">
             <button class="qr-nav-item active" data-view="main">${ICONS.zap} 重命名主页</button>
+            <button class="qr-nav-item" data-view="shares">${ICONS.share} 我的分享</button>
             <button class="qr-nav-item" data-view="csv">${ICONS.csv} CSV 工具</button>
             <button class="qr-nav-item" data-view="tools">${ICONS.toolbox} 工具箱</button>
             <button class="qr-nav-item" data-view="changelog">${ICONS.log} 更新日志</button>
@@ -111,6 +113,7 @@ export function createModalUI() {
 
       <div class="qr-body">
         <div id="viewMain" class="qr-page-view"></div>
+        <div id="viewShares" class="qr-page-view hidden"></div>
         <div id="viewCsv" class="qr-page-view hidden"></div>
         <div id="viewTools" class="qr-page-view hidden"></div>
         <div id="viewChangelog" class="qr-page-view hidden"></div>
@@ -141,6 +144,7 @@ export function createModalUI() {
   document.body.appendChild(overlay);
 
   renderMainViewComponent();
+  renderSharesViewComponent();
   renderCsvViewComponent();
   renderToolsViewComponent();
   loadAndRenderChangelogComponent();
@@ -557,12 +561,22 @@ export function switchPageView(pageId) {
   });
 
   document.getElementById('viewMain').classList.toggle('hidden', pageId !== 'main');
+  document.getElementById('viewShares').classList.toggle('hidden', pageId !== 'shares');
   document.getElementById('viewCsv').classList.toggle('hidden', pageId !== 'csv');
   document.getElementById('viewTools').classList.toggle('hidden', pageId !== 'tools');
   document.getElementById('viewChangelog').classList.toggle('hidden', pageId !== 'changelog');
   document.getElementById('viewAbout').classList.toggle('hidden', pageId !== 'about');
 
-  if (pageId === 'tools') {
+  const footerEl = document.querySelector('#qrModalOverlay .qr-footer');
+  if (footerEl) {
+    footerEl.style.display = pageId === 'shares' ? 'none' : 'flex';
+  }
+
+  if (pageId === 'shares') {
+    onEnterSharesView();
+  } else if (pageId === 'main' && state.fileList.length === 0) {
+    fetchFileList();
+  } else if (pageId === 'tools') {
     refreshToolsView();
   } else if (pageId === 'changelog') {
     loadAndRenderChangelogComponent();
@@ -744,6 +758,13 @@ export function openModal() {
   parseUrlAndSyncState();
   const overlay = document.getElementById('qrModalOverlay');
   overlay.classList.add('active');
+  if ((window.location.hash || '').includes('/list/myshare')) {
+    switchPageView('shares');
+    if (state.shares.list.length === 0) {
+      fetchAllMyShares();
+    }
+    return;
+  }
   fetchFileList();
 }
 
@@ -913,9 +934,9 @@ export function bindEvents() {
   // 初始化手写自定义 Select 下拉框组件
   bindCustomSelects();
 
-  document.querySelectorAll('.qr-chip').forEach((chip) => {
+  document.querySelectorAll('#viewMain .qr-chip').forEach((chip) => {
     chip.addEventListener('click', (e) => {
-      document.querySelectorAll('.qr-chip').forEach((c) => c.classList.remove('active'));
+      document.querySelectorAll('#viewMain .qr-chip').forEach((c) => c.classList.remove('active'));
       e.currentTarget.classList.add('active');
       state.filterType = e.currentTarget.dataset.type;
       recalculateNewNames();
@@ -937,8 +958,9 @@ export function bindEvents() {
     deleteBtn.addEventListener('click', runBatchDelete);
   }
 
-  // 绑定工具箱页签事件
+  // 绑定工具箱与我的分享页签事件
   bindToolsEvents();
+  bindSharesEvents();
 
   chrome.runtime.onMessage.addListener((req, sender, sendResponse) => {
     if (req.action === 'TOGGLE_RENAME_PANEL') {

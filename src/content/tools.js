@@ -4,7 +4,7 @@
 
 import { state } from './state.js';
 import { ICONS } from './constants.js';
-import { escapeHtml, log } from './utils.js';
+import { escapeHtml, formatSize, log } from './utils.js';
 import { customAlert, customConfirm, toast } from './dialogs.js';
 import { requestDeleteFiles, requestMoveFiles, scanSubdirectoryFiles, fetchFileList } from './api.js';
 import { renderTable, updateStatText } from './ui.js';
@@ -31,19 +31,6 @@ function classifyType(fileName) {
     if (pattern.test(fileName)) return type;
   }
   return 'other';
-}
-
-function formatSize(bytes) {
-  const n = Number(bytes) || 0;
-  if (n === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let i = 0;
-  let value = n;
-  while (value >= 1024 && i < units.length - 1) {
-    value /= 1024;
-    i++;
-  }
-  return `${value.toFixed(i === 0 ? 0 : 2)} ${units[i]}`;
 }
 
 function renderStatistics() {
