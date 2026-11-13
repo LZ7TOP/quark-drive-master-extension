@@ -66,6 +66,11 @@ export function resolveShareStatus(item) {
   return { key: 'valid', label: '有效', tone: 'green', order: 0 };
 }
 
+function hasShareTelemetry(item) {
+  if (!item) return false;
+  return item.click_pv >= 0 || item.save_pv > 0 || item.download_pv > 0 || item.visit_user_count > 0;
+}
+
 function normalizeShareItem(raw, index = 0) {
   const firstFile = raw.first_file && typeof raw.first_file === 'object' ? raw.first_file : {};
   const pwdId = String(raw.pwd_id || '').trim();
@@ -84,6 +89,10 @@ function normalizeShareItem(raw, index = 0) {
     typeof raw.is_dir === 'boolean'
       ? raw.is_dir
       : Boolean(firstFile.dir ?? (Number(raw.all_file_num) > 1 || Number(raw.file_only_num) > 1));
+
+  const rawClickPv = raw.click_pv ?? raw.view_pv ?? raw.browse_pv;
+  const parsedClickPv =
+    rawClickPv !== undefined && rawClickPv !== null && rawClickPv !== '' && !Number.isNaN(Number(rawClickPv)) ? Number(rawClickPv) : -1;
 
   const item = {
     uid: String(raw.share_id || inferredPwdId || shareUrl || `share_${index}_${Date.now()}`),
@@ -114,10 +123,10 @@ function normalizeShareItem(raw, index = 0) {
     status: raw.status !== undefined && raw.status !== null ? Number(raw.status) : 1,
     partial_violation: Boolean(raw.partial_violation),
     violation_cnt: Number(raw.violation_cnt) || 0,
-    click_pv: raw.click_pv !== undefined && raw.click_pv !== null ? Number(raw.click_pv) : -1,
-    save_pv: Number(raw.save_pv) || 0,
-    download_pv: Number(raw.download_pv) || 0,
-    visit_user_count: Number(raw.visit_user_count) || 0,
+    click_pv: parsedClickPv,
+    save_pv: Number(raw.save_pv ?? raw.save_count ?? 0) || 0,
+    download_pv: Number(raw.download_pv ?? raw.download_count ?? 0) || 0,
+    visit_user_count: Number(raw.visit_user_count ?? raw.visit_uv ?? 0) || 0,
     stoken: String(raw.stoken || ''),
     thumbnail: sanitizeHttpUrl(raw.thumbnail || ''),
     selected: false
@@ -410,10 +419,14 @@ function computeShareSummary(list) {
     expired: 0,
     failed: 0,
     encrypted: 0,
+    dirCount: 0,
     totalSize: 0,
+    avgSize: 0,
     totalFiles: 0,
     totalSaves: 0,
     totalDownloads: 0,
+    hasTelemetry: false,
+    hasClickPv: false,
     pathCounts: {}
   };
 
@@ -421,6 +434,9 @@ function computeShareSummary(list) {
     const st = item.statusInfo?.key || 'valid';
     if (summary[st] !== undefined) summary[st]++;
     if (item.is_encrypted) summary.encrypted++;
+    if (item.is_dir) summary.dirCount++;
+    if (hasShareTelemetry(item)) summary.hasTelemetry = true;
+    if (item.click_pv >= 0) summary.hasClickPv = true;
     summary.totalSize += item.size || 0;
     summary.totalFiles += item.file_only_num || 0;
     summary.totalSaves += item.save_pv || 0;
@@ -430,6 +446,7 @@ function computeShareSummary(list) {
     summary.pathCounts[pLabel] = (summary.pathCounts[pLabel] || 0) + 1;
   });
 
+  summary.avgSize = summary.total > 0 ? Math.round(summary.totalSize / summary.total) : 0;
   return summary;
 }
 
@@ -1081,7 +1098,14 @@ function openShareDetailModal(item) {
 
   const safeHref = sanitizeHttpUrl(item.share_url);
   const st = item.statusInfo || resolveShareStatus(item);
-  const clickText = item.click_pv < 0 ? '未公开' : String(item.click_pv);
+  const telemetryReady = hasShareTelemetry(item);
+  const dirCount = Math.max(0, (Number(item.all_file_num) || 0) - (Number(item.file_only_num) || 0));
+  const clickText = !telemetryReady ? 'PC端未下发' : item.click_pv < 0 ? '未公开' : String(item.click_pv);
+  const visitorMetaText = telemetryReady ? `${clickText} / ${item.visit_user_count} 人` : 'PC端未开放统计';
+  const mediaMetaText =
+    item.pic_total > 0 || item.video_total > 0
+      ? `${item.pic_total} 图 / ${item.video_total} 视频`
+      : `${item.file_only_num} 文件${dirCount > 0 ? ` · ${dirCount} 子目录` : ''}`;
   const expireText = item.expired_type === 1 ? '永久有效' : formatTimestamp(item.expired_at);
 
   const dialog = document.createElement('div');
@@ -1123,8 +1147,8 @@ function openShareDetailModal(item) {
           <div class="qr-share-detail-kpis">
             <div class="qr-stat-item"><span class="qr-stat-value">${formatSize(item.size)}</span><span class="qr-stat-label">分享总体积</span></div>
             <div class="qr-stat-item"><span class="qr-stat-value">${item.file_only_num} / ${item.all_file_num}</span><span class="qr-stat-label">文件数 / 含目录</span></div>
-            <div class="qr-stat-item"><span class="qr-stat-value">${item.save_pv}</span><span class="qr-stat-label">转存次数</span></div>
-            <div class="qr-stat-item"><span class="qr-stat-value">${item.download_pv}</span><span class="qr-stat-label">下载次数</span></div>
+            <div class="qr-stat-item"><span class="qr-stat-value" style="${telemetryReady ? '' : 'color:#71717a;'}" title="${telemetryReady ? '' : '夸克 PC 端列表接口未下发转存统计'}">${telemetryReady ? item.save_pv : '未下发'}</span><span class="qr-stat-label">转存次数</span></div>
+            <div class="qr-stat-item"><span class="qr-stat-value" style="${telemetryReady ? '' : 'color:#71717a;'}" title="${telemetryReady ? '' : '夸克 PC 端列表接口未下发下载统计'}">${telemetryReady ? item.download_pv : '未下发'}</span><span class="qr-stat-label">下载次数</span></div>
           </div>
 
           <div class="qr-share-detail-meta">
@@ -1133,8 +1157,8 @@ function openShareDetailModal(item) {
             <div><span>创建时间：</span><b>${escapeHtml(formatTimestamp(item.created_at))}</b></div>
             <div><span>更新时间：</span><b>${escapeHtml(formatTimestamp(item.updated_at))}</b></div>
             <div><span>有效期至：</span><b>${escapeHtml(expireText)}</b></div>
-            <div><span>浏览/访客：</span><b>${escapeHtml(clickText)} / ${item.visit_user_count} 人</b></div>
-            <div><span>图片/视频：</span><b>${item.pic_total} 图 / ${item.video_total} 视频</b></div>
+            <div><span>浏览/访客：</span><b title="${telemetryReady ? '' : '夸克 PC 网页端接口返回 click_pv=-1，访客/浏览统计未对外开放'}">${escapeHtml(visitorMetaText)}</b></div>
+            <div><span>内容结构：</span><b>${escapeHtml(mediaMetaText)}</b></div>
             <div><span>Share ID：</span><b style="font-family:monospace;">${escapeHtml(item.share_id || '-')}</b></div>
             <div><span>First FID：</span><b style="font-family:monospace;">${escapeHtml(item.first_fid || '-')}</b></div>
           </div>
@@ -1280,7 +1304,17 @@ function renderShareDashboard() {
       </div>
       <div class="qr-stat-item">
         <span class="qr-stat-value" style="color: #60a5fa;">${formatSize(summary.totalSize)}</span>
-        <span class="qr-stat-label">总分享体积 · 转存 ${summary.totalSaves}</span>
+        <span class="qr-stat-label" title="${
+          summary.total === 0 || summary.hasTelemetry
+            ? ''
+            : '夸克 PC 网页端列表接口未下发浏览/转存/下载次数（click_pv=-1），此处展示单条平均体积'
+        }">${
+          summary.total === 0
+            ? '总分享体积'
+            : summary.hasTelemetry
+              ? `总分享体积 · 转存 ${summary.totalSaves}`
+              : `总分享体积 · 均 ${formatSize(summary.avgSize)}/条`
+        }</span>
       </div>
     </div>
 
@@ -1355,6 +1389,19 @@ function updateShareActionLabels() {
   const sourceBadge = document.getElementById('qrShareSourceBadge');
   if (sourceBadge) {
     sourceBadge.textContent = state.shares.sourceLabel;
+  }
+
+  const hasAnyTelemetry = state.shares.list.some(hasShareTelemetry);
+  const telemetryHint = document.getElementById('qrShareTelemetryHint');
+  if (telemetryHint) {
+    telemetryHint.classList.toggle('hidden', state.shares.list.length === 0 || hasAnyTelemetry);
+  }
+
+  const timeColLabel = document.getElementById('qrShareTimeColLabel');
+  if (timeColLabel) {
+    const useAttrLabel = state.shares.list.length > 0 && !hasAnyTelemetry;
+    timeColLabel.textContent = useAttrLabel ? '分享时间 / 属性' : '分享时间 / 热度';
+    timeColLabel.title = useAttrLabel ? '夸克 PC 网页端列表接口返回 click_pv=-1 且未下发热度统计，当前显示分享属性' : '';
   }
 
   const copyBtn = document.getElementById('qrShareCopyBtn');
@@ -1447,7 +1494,7 @@ function renderShareTable() {
     tbody.innerHTML = `
       <tr data-empty-row="true">
         <td colspan="6" style="text-align: center; color: #71717a; padding: 36px 16px;">
-          尚未加载分享数据，点击右上角 <b>「一键拉取分享」</b> 或 <b>「导入清单」</b>（支持 JSON / CSV / 抓包响应如 请求.txt）即可可视化查看。
+          尚未加载分享数据，点击右上角 <b>「一键拉取」</b> 或 <b>「导入清单」</b>（支持 JSON / CSV / 抓包响应如 请求.txt）即可可视化查看。
         </td>
       </tr>
     `;
@@ -1474,7 +1521,23 @@ function renderShareTable() {
     .map((item) => {
       const st = item.statusInfo;
       const safeHref = sanitizeHttpUrl(item.share_url);
-      const pvText = item.click_pv >= 0 ? `浏览 ${item.click_pv} · ` : '';
+      const dirCount = Math.max(0, (Number(item.all_file_num) || 0) - (Number(item.file_only_num) || 0));
+      const countLabel =
+        item.file_only_num > 0 ? `${item.file_only_num} 个文件` : item.is_dir ? `${item.all_file_num || 1} 个目录` : '1 个文件';
+      const countTitle = dirCount > 0 ? `含 ${item.file_only_num} 个文件 · ${dirCount} 个文件夹` : countLabel;
+
+      let subMetaHtml = '';
+      if (hasShareTelemetry(item)) {
+        const pvParts = [];
+        if (item.click_pv >= 0) pvParts.push(`浏览 ${item.click_pv}`);
+        pvParts.push(`转存 ${item.save_pv}`);
+        pvParts.push(`下载 ${item.download_pv}`);
+        subMetaHtml = `<div class="qr-share-sub-meta">${pvParts.join(' · ')}</div>`;
+      } else {
+        const accessLabel = item.is_encrypted ? '加密链接' : '公开链接';
+        const kindLabel = item.is_dir ? '文件夹' : '单文件';
+        subMetaHtml = `<div class="qr-share-sub-meta qr-share-sub-muted" title="夸克 PC 网页端列表接口未下发浏览/转存/下载统计（click_pv=-1）">${accessLabel} · ${kindLabel} · 热度未下发</div>`;
+      }
 
       return `
         <tr class="qr-share-row" data-uid="${escapeHtml(item.uid)}">
@@ -1496,14 +1559,14 @@ function renderShareTable() {
           </td>
           <td data-value="${item.size}">
             <div class="qr-share-size-main">${formatSize(item.size)}</div>
-            <div class="qr-share-sub-meta">${item.file_only_num} 个文件</div>
+            <div class="qr-share-sub-meta" title="${escapeHtml(countTitle)}">${countLabel}</div>
           </td>
           <td data-value="${st.order}_${escapeHtml(st.label)}">
             <span class="qr-share-badge qr-share-badge-${st.tone}">${escapeHtml(st.label)}</span>
           </td>
           <td data-value="${item.created_at}">
             <div class="qr-share-time-main">${escapeHtml(formatTimestamp(item.created_at))}</div>
-            <div class="qr-share-sub-meta">${pvText}转存 ${item.save_pv} · 下载 ${item.download_pv}</div>
+            ${subMetaHtml}
           </td>
           <td>
             <div class="qr-share-row-actions">
@@ -1583,6 +1646,7 @@ export function renderSharesViewComponent() {
       <div class="qr-share-source-info">
         <span class="qr-share-source-dot"></span>
         <span id="qrShareSourceBadge" class="qr-share-source-text">${escapeHtml(state.shares.sourceLabel)}</span>
+        <span id="qrShareTelemetryHint" class="qr-share-api-hint hidden" title="夸克 PC 网页端 /share/mypage/detail 接口未下发浏览/转存/下载统计（click_pv=-1），属官方接口限制而非拉取异常">官方未下发热度</span>
       </div>
       <div class="qr-share-toolbar-actions">
         <button type="button" id="qrShareFetchBtn" class="qr-btn-tool qr-btn-blue" title="在线分页拉取当前账号全部我的分享">${ICONS.refresh} 一键拉取</button>
@@ -1600,9 +1664,9 @@ export function renderSharesViewComponent() {
 
     <div class="qr-filter-bar qr-share-filter-bar">
       <div id="qrShareFilterChips" class="qr-type-filters"></div>
-      <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto;">
         <button type="button" id="qrShareSelectInvalidBtn" class="qr-btn-tool qr-btn-amber" style="height: 26px; padding: 0 8px; font-size: 11px;" title="一键勾选已过期、失败或全包违规的分享记录">${ICONS.warn} 勾选失效/违规</button>
-        <input type="text" id="qrShareKeywordInput" class="qr-input" placeholder="搜索标题 / 链接 / 目录..." style="padding: 2px 8px; font-size: 11px; width: 160px; height: 26px;">
+        <input type="text" id="qrShareKeywordInput" class="qr-input" placeholder="搜索标题 / 链接 / 目录..." style="padding: 2px 8px; font-size: 11px; width: 160px; height: 26px; flex: none;">
       </div>
     </div>
 
@@ -1612,34 +1676,34 @@ export function renderSharesViewComponent() {
         <caption id="qrShareTableCaption" class="qr-sr-only">当前用户的夸克网盘分享内容列表</caption>
         <thead>
           <tr>
-            <th scope="col" style="width: 36px; text-align: center;">
+            <th scope="col" style="width: 38px; text-align: center;">
               <input type="checkbox" id="qrShareSelectAll" aria-label="全选当前分享列表">
             </th>
-            <th scope="col" class="qr-th-sortable" data-sort-key="title" data-type="text" style="width: 39%;">
+            <th scope="col" class="qr-th-sortable" data-sort-key="title" data-type="text">
               <button type="button" class="qr-th-sort-btn">
                 <span>分享标题 / 来源路径</span>
                 <span class="qr-sort-indicator" aria-hidden="true"></span>
               </button>
             </th>
-            <th scope="col" class="qr-th-sortable" data-sort-key="size" data-type="number" style="width: 14%;">
+            <th scope="col" class="qr-th-sortable" data-sort-key="size" data-type="number" style="width: 112px;">
               <button type="button" class="qr-th-sort-btn">
                 <span>大小 / 文件</span>
                 <span class="qr-sort-indicator" aria-hidden="true"></span>
               </button>
             </th>
-            <th scope="col" class="qr-th-sortable" data-sort-key="status" data-type="text" style="width: 15%;">
+            <th scope="col" class="qr-th-sortable" data-sort-key="status" data-type="text" style="width: 124px;">
               <button type="button" class="qr-th-sort-btn">
                 <span>分享状态</span>
                 <span class="qr-sort-indicator" aria-hidden="true"></span>
               </button>
             </th>
-            <th scope="col" class="qr-th-sortable" data-sort-key="created_at" data-type="number" aria-sort="descending" style="width: 19%;">
+            <th scope="col" class="qr-th-sortable" data-sort-key="created_at" data-type="number" aria-sort="descending" style="width: 186px;">
               <button type="button" class="qr-th-sort-btn">
-                <span>分享时间 / 热度</span>
+                <span id="qrShareTimeColLabel">分享时间 / 热度</span>
                 <span class="qr-sort-indicator" aria-hidden="true"></span>
               </button>
             </th>
-            <th scope="col" style="width: 116px; text-align: center;">操作</th>
+            <th scope="col" style="width: 114px; text-align: center;">操作</th>
           </tr>
         </thead>
         <tbody id="qrShareTableBody"></tbody>

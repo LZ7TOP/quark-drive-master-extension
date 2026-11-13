@@ -457,10 +457,10 @@ export function mountShareInnerBrowser(containerEl, shareItem, { onSaveSelected 
       <table class="qr-table" style="font-size:11px;">
         <thead>
           <tr>
-            <th style="width:30px; text-align:center;"><input type="checkbox" id="qrShareInnerSelectAll" aria-label="全选当前文件"></th>
-            <th style="width:58%;">文件名 ${shareItem.partial_violation ? '（含异常检测）' : ''}</th>
-            <th style="width:18%;">大小</th>
-            <th style="width:24%;">状态 / 更新时间</th>
+            <th style="width:34px; text-align:center;"><input type="checkbox" id="qrShareInnerSelectAll" aria-label="全选当前文件"></th>
+            <th>文件名 ${shareItem.partial_violation ? '（含异常检测）' : ''}</th>
+            <th style="width:84px;">大小</th>
+            <th style="width:152px;">状态 / 更新时间</th>
           </tr>
         </thead>
         <tbody id="qrShareInnerTbody">
@@ -580,8 +580,8 @@ export function mountShareInnerBrowser(containerEl, shareItem, { onSaveSelected 
     tbodyEl.innerHTML = currentEntries
       .map((entry) => {
         const nameBlock = entry.is_dir
-          ? `<span class="qr-dir-link qr-inner-dir" data-fid="${escapeHtml(entry.fid)}" data-name="${escapeHtml(entry.file_name)}">${ICONS.folder} ${escapeHtml(entry.file_name)}</span>`
-          : `<span style="display:flex; align-items:center; gap:5px;">${ICONS.file} <span>${escapeHtml(entry.file_name)}</span></span>`;
+          ? `<span class="qr-dir-link qr-inner-dir" data-fid="${escapeHtml(entry.fid)}" data-name="${escapeHtml(entry.file_name)}">${ICONS.folder} <span>${escapeHtml(entry.file_name)}</span></span>`
+          : `<span class="qr-main-file-name">${ICONS.file} <span>${escapeHtml(entry.file_name)}</span></span>`;
         const pathSub =
           inSearchView && entry.relPath !== entry.file_name
             ? `<div style="font-size:10px; color:#71717a; padding-left:18px;">${escapeHtml(entry.relPath)}</div>`

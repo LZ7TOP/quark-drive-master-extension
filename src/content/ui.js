@@ -515,10 +515,10 @@ export function renderMainViewComponent() {
       <table class="qr-table">
         <thead>
           <tr>
-            <th style="width: 36px; text-align: center;"><input type="checkbox" id="qrSelectAll" checked></th>
-            <th style="width: 38%;">原文件名 (点击文件夹进入)</th>
-            <th style="width: 42%;">修改后名称 (可直接编辑)</th>
-            <th style="width: 20%;">状态</th>
+            <th style="width: 38px; text-align: center;"><input type="checkbox" id="qrSelectAll" checked></th>
+            <th>原文件名 (点击文件夹进入)</th>
+            <th>修改后名称 (可直接编辑)</th>
+            <th style="width: 158px;">状态</th>
           </tr>
         </thead>
         <tbody id="qrTableBody">
@@ -536,9 +536,9 @@ export function renderCsvViewComponent() {
   if (!csvViewEl) return;
 
   const sampleRowsHtml = [
-    { old: '01.狂飙.1080p.mp4', new: '狂飙.EP01.1080p.mp4', fid: '660c84cabb4240afb1ec96fa134c3334' },
-    { old: '02.狂飙.1080p.mp4', new: '狂飙.EP02.1080p.mp4', fid: '67b1755c9b3e407e84eec16e544dff83' },
-    { old: '广告宣发图片.jpg', new: '封面图.jpg', fid: '67b290ac71c210abef912093102ef101' }
+    { old: '01.示例视频.1080p.mp4', new: '示例视频.EP01.1080p.mp4', fid: '00000000000000000000000000000001' },
+    { old: '02.示例视频.1080p.mp4', new: '示例视频.EP02.1080p.mp4', fid: '00000000000000000000000000000002' },
+    { old: '宣发海报图片.jpg', new: '封面图.jpg', fid: '00000000000000000000000000000003' }
   ]
     .map(
       (r) => `
@@ -837,9 +837,9 @@ export function renderTable() {
 
       let fileNameHtml = escapeHtml(file.file_name);
       if (file.is_dir) {
-        fileNameHtml = `<span class="qr-dir-link" data-fid="${file.fid}" data-name="${escapeHtml(file.file_name)}">${ICONS.folder} ${escapeHtml(file.file_name)}</span>`;
+        fileNameHtml = `<span class="qr-dir-link" data-fid="${file.fid}" data-name="${escapeHtml(file.file_name)}">${ICONS.folder} <span>${escapeHtml(file.file_name)}</span></span>`;
       } else {
-        fileNameHtml = `<span style="display: flex; align-items: center; gap: 6px;">${ICONS.file} ${escapeHtml(file.file_name)}</span>`;
+        fileNameHtml = `<span class="qr-main-file-name">${ICONS.file} <span>${escapeHtml(file.file_name)}</span></span>`;
       }
 
       return `

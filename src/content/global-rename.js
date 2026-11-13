@@ -232,7 +232,7 @@ export function renderGlobalTable() {
       const pdirStr = String(file.pdir_fid || '0');
       const pdirLabel = pdirStr === '0' ? '根目录' : `${pdirStr.slice(0, 8)}...`;
       const mainTitle = file.is_dir
-        ? `<span class="qr-dir-link qr-global-enter-dir" data-fid="${escapeHtml(fidStr)}" data-name="${escapeHtml(file.file_name)}" title="进入此文件夹目录">${ICONS.folder} ${escapeHtml(file.file_name)}</span>`
+        ? `<span class="qr-dir-link qr-global-enter-dir" data-fid="${escapeHtml(fidStr)}" data-name="${escapeHtml(file.file_name)}" title="进入此文件夹目录">${ICONS.folder} <span>${escapeHtml(file.file_name)}</span></span>`
         : `<span class="qr-global-file-name">${ICONS.file} <span>${escapeHtml(file.file_name)}</span></span>`;
 
       const metaSub = `
@@ -585,10 +585,10 @@ export function renderGlobalViewComponent() {
       <table class="qr-table">
         <thead>
           <tr>
-            <th style="width: 36px; text-align: center;"><input type="checkbox" id="qrGlobalSelectAll"></th>
-            <th style="width: 38%;">原文件名 &amp; 所在目录</th>
-            <th style="width: 40%;">修改后名称 (可直接编辑)</th>
-            <th style="width: 22%;">状态 / 操作</th>
+            <th style="width: 38px; text-align: center;"><input type="checkbox" id="qrGlobalSelectAll"></th>
+            <th>原文件名 &amp; 所在目录</th>
+            <th>修改后名称 (可直接编辑)</th>
+            <th style="width: 158px;">状态 / 操作</th>
           </tr>
         </thead>
         <tbody id="qrGlobalTableBody"></tbody>
